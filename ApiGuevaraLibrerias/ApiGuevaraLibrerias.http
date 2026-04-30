@@ -1,0 +1,6 @@
+@ApiGuevaraLibrerias_HostAddress = http://localhost:5292
+
+GET {{ApiGuevaraLibrerias_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
