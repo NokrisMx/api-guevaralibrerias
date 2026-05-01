@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var dbConnectionString = builder.Configuration.GetConnectionString("ConexionSql");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
+ApiGuevaraLibrerias.Mapping.MapsterConfig.RegisterMappings();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 builder.Services.AddControllers();
 //builder.Services.AddOpenApi();
