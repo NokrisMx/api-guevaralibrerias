@@ -164,3 +164,7 @@ E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\obj\Debug\net10.0\ApiGuevaraLibrerias.sourcelink.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\Asp.Versioning.Abstractions.dll
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\Asp.Versioning.Http.dll
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\Asp.Versioning.Mvc.dll
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\Asp.Versioning.Mvc.ApiExplorer.dll

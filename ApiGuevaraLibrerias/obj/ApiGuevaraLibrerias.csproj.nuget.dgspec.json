@@ -51,6 +51,14 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "Asp.Versioning.Mvc": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
+            "Asp.Versioning.Mvc.ApiExplorer": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
             "Mapster": {
               "target": "Package",
               "version": "[10.0.7, )"
@@ -59,11 +67,11 @@
               "target": "Package",
               "version": "[10.0.7, )"
             },
-            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[10.0.7, )"
             },
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
               "version": "[10.0.7, )"
             },
@@ -82,6 +90,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[10.0.7, )"
+            },
+            "Microsoft.OpenApi": {
+              "target": "Package",
+              "version": "[1.6.22, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

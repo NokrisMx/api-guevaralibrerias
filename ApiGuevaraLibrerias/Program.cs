@@ -1,28 +1,41 @@
+using ApiGuevaraLibrerias.Constants;
+using ApiGuevaraLibrerias.Extensions;
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Repository;
+using ApiGuevaraLibrerias.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var dbConnectionString = builder.Configuration.GetConnectionString("ConexionSql");
+var secretKey = builder.Configuration.GetValue<string>("ApiSettings:SecretKey");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+//builder.Services.AddScoped<IBookRepository, BookRepository>();
+//builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 ApiGuevaraLibrerias.Mapping.MapsterConfig.RegisterMappings();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
 builder.Services.AddControllers();
-//builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerConfiguration();
+builder.Services.AddApiVersioningConfiguration();
+builder.Services.AddCorsConfiguration();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    //app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwaggerConfiguration();
+
+app.UseDatabaseMigrationWithSeedConfiguration();
+
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
+
+app.UseCors(PolicyNames.AllowSpecificOrigin);
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
