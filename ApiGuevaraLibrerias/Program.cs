@@ -27,7 +27,7 @@ var app = builder.Build();
 
 app.UseSwaggerConfiguration();
 
-app.UseDatabaseMigrationWithSeedConfiguration();
+//app.UseDatabaseMigrationWithSeedConfiguration();
 
 app.UseStaticFiles();
 
