@@ -1,8 +1,9 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace ApiGuevaraLibrerias.Models.Dtos;
 
-public class CreateAuthorDto
+public class UpdateAuthorDto
 {
     [Required(ErrorMessage = "El nombre es obligatorio.")]
     [MaxLength(150, ErrorMessage = "El nombre no puede exceder los 150 caracteres.")]

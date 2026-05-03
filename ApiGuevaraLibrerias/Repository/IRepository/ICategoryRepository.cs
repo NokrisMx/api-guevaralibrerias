@@ -7,7 +7,7 @@ public interface ICategoryRepository
     Task<IEnumerable<Category>> GetCategories();
     Task<Category?> GetCategory(int id);
     Task<bool> CategoryExists(int id);
-    Task<bool> CategoryExistsByName(string name);
+    Task<bool> CategoryExistsByName(string name, int excludeId = 0);
     Task<Category> CreateCategory(Category category);
     Task<Category?> UpdateCategory(Category category);
     Task<bool> DeleteCategory(int id);

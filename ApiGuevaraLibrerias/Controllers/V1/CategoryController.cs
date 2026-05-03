@@ -50,8 +50,6 @@ namespace ApiGuevaraLibrerias.Controllers.V1
             return Ok(categoryDto);
         }
 
-        [AllowAnonymous]
-
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -60,26 +58,66 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
         {
-            if (dto == null)
-                return BadRequest("Datos inválidos");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (await _categoryRepository.CategoryExistsByName(dto.Name))
+                return Conflict($"La categoría '{dto.Name}' ya existe");
+
+            var created = await _categoryRepository.CreateCategory(dto.Adapt<Category>());
+
+            return CreatedAtRoute("GetCategory", new { id = created.Id }, created.Adapt<CategoryDto>());
+        }
+
+        [HttpPut("{id:int}", Name = "UpdateCategory")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDto dto)
+        {
+            if (id <= 0)
+                return BadRequest("ID inválido");
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var exists = await _categoryRepository.CategoryExistsByName(dto.Name);
-
-            if (exists)
+            // Se excluye el ID actual para permitir guardar con el mismo nombre
+            if (await _categoryRepository.CategoryExistsByName(dto.Name, excludeId: id))
                 return Conflict($"La categoría '{dto.Name}' ya existe");
 
-            var category = dto.Adapt<Category>();
+            var category = new Category { Id = id, Name = dto.Name };
+            var updated = await _categoryRepository.UpdateCategory(category);
 
-            var createdCategory = await _categoryRepository.CreateCategory(category);
+            if (updated == null)
+                return NotFound($"La categoría con ID {id} no fue encontrada");
 
-            var categoryDto = createdCategory.Adapt<CategoryDto>();
-
-            return CreatedAtRoute("GetCategory", new { id = categoryDto.Id }, categoryDto);
+            return Ok(updated.Adapt<CategoryDto>());
         }
 
+        [HttpDelete("{id:int}", Name = "DeleteCategory")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteCategory(int id)
+        {
+            if (id <= 0)
+                return BadRequest("El ID debe ser mayor que 0");
+
+            if (!await _categoryRepository.CategoryExists(id))
+                return NotFound($"La categoría con ID {id} no fue encontrada");
+
+            var deleted = await _categoryRepository.DeleteCategory(id);
+
+            if (!deleted)
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error al eliminar la categoría");
+
+            return Ok(new { message = $"La categoría con ID {id} fue eliminada correctamente" });
+        }
 
 
     }

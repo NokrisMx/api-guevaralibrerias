@@ -16,4 +16,5 @@ public class UserRegisterDto
     public string Password { get; set; } = string.Empty;
 
     public string? Name { get; set; }
+    public string Role { get; set; } = "User";
 }

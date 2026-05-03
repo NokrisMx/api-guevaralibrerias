@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApiGuevaraLibrerias.Models;
 
-[Index(nameof(Name))]
+[Index(nameof(Name), IsUnique = true)]
 public class Author
 {
     [Key]

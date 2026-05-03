@@ -16,9 +16,9 @@ public class CategoryRepository : ICategoryRepository
         return await _db.Categories.AnyAsync(c => c.Id == id);
     }
 
-    public async Task<bool> CategoryExistsByName(string name)
+    public async Task<bool> CategoryExistsByName(string name, int excludeId = 0)
     {
-        return await _db.Categories.AnyAsync(c => c.Name.ToLower().Trim() == name.ToLower().Trim());
+        return await _db.Categories.AnyAsync(c => c.Name.ToLower().Trim() == name.ToLower().Trim() && c.Id != excludeId);
     }
 
     public async Task<Category> CreateCategory(Category category)
