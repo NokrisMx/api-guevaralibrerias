@@ -5,136 +5,269 @@ namespace ApiEcommerce.Data;
 
 public static class DataSeeder
 {
-    public static void SeedData(ApplicationDbContext appContext)
+    public static void SeedData(ApplicationDbContext db)
     {
-        // Evitar duplicados
-        if (appContext.Categories.Any()) return;
+        SeedRoles(db);
+        SeedUsers(db);
+        SeedCategories(db);
+        SeedAuthors(db);
+        SeedBooks(db);
+        SeedOrders(db);
+    }
 
-        // CATEGORIES
-        var categories = new List<Category>
+    private static void SeedRoles(ApplicationDbContext db)
+    {
+        if (db.Roles.Any()) return;
+
+        db.Roles.AddRange(
+            new IdentityRole
+            {
+                Id = "role-admin",
+                Name = "Admin",
+                NormalizedName = "ADMIN",
+                ConcurrencyStamp = Guid.NewGuid().ToString()
+            },
+            new IdentityRole
+            {
+                Id = "role-user",
+                Name = "User",
+                NormalizedName = "USER",
+                ConcurrencyStamp = Guid.NewGuid().ToString()
+            }
+        );
+        db.SaveChanges();
+    }
+
+    private static void SeedUsers(ApplicationDbContext db)
+    {
+        if (db.Users.Any()) return;
+
+        var hasher = new PasswordHasher<ApplicationUser>();
+
+        var admin = new ApplicationUser
         {
-            new Category { Name = "Novela" },
-            new Category { Name = "Tecnología" },
-            new Category { Name = "Historia" },
-            new Category { Name = "Negocios" }
+            Id = "user-admin",
+            Name = "Aldo Guevara",
+            UserName = "aldoguevara",
+            NormalizedUserName = "ALDOGUEVARA",
+            Email = "admin@guevaralibrerias.com",
+            NormalizedEmail = "ADMIN@GUEVARALIBRERIAS.COM",
+            EmailConfirmed = true,
+            PhoneNumber = "8112345678",
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString()
         };
+        admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
 
-        appContext.Categories.AddRange(categories);
-        appContext.SaveChanges();
-
-        // AUTHORS
-        var authors = new List<Author>
+        var user = new ApplicationUser
         {
-            new Author { Name = "Gabriel García Márquez", Bio = "Escritor colombiano" },
-            new Author { Name = "Yuval Noah Harari", Bio = "Historiador y escritor" },
-            new Author { Name = "Robert C. Martin", Bio = "Experto en software" },
-            new Author { Name = "Stephen King", Bio = "Autor de novelas de terror" }
+            Id = "user-client",
+            Name = "Juan Pérez",
+            UserName = "juanperez",
+            NormalizedUserName = "JUANPEREZ",
+            Email = "juan@gmail.com",
+            NormalizedEmail = "JUAN@GMAIL.COM",
+            EmailConfirmed = true,
+            PhoneNumber = "8119876543",
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString()
         };
+        user.PasswordHash = hasher.HashPassword(user, "User123!");
 
-        appContext.Authors.AddRange(authors);
-        appContext.SaveChanges();
+        db.Users.AddRange(admin, user);
+        db.SaveChanges();
 
-        // BOOKS
-        var books = new List<Book>
-        {
+        // Asignar roles
+        db.UserRoles.AddRange(
+            new IdentityUserRole<string> { UserId = "user-admin", RoleId = "role-admin" },
+            new IdentityUserRole<string> { UserId = "user-client", RoleId = "role-user" }
+        );
+        db.SaveChanges();
+    }
+
+    private static void SeedCategories(ApplicationDbContext db)
+    {
+        if (db.Categories.Any()) return;
+
+        db.Categories.AddRange(
+            new Category { Name = "Ficción", CreatedAt = DateTime.UtcNow },
+            new Category { Name = "Ciencia", CreatedAt = DateTime.UtcNow },
+            new Category { Name = "Historia", CreatedAt = DateTime.UtcNow },
+            new Category { Name = "Fantasía", CreatedAt = DateTime.UtcNow },
+            new Category { Name = "Tecnología", CreatedAt = DateTime.UtcNow }
+        );
+        db.SaveChanges();
+    }
+
+    private static void SeedAuthors(ApplicationDbContext db)
+    {
+        if (db.Authors.Any()) return;
+
+        db.Authors.AddRange(
+            new Author
+            {
+                Name = "Gabriel García Márquez",
+                Bio = "Escritor colombiano, premio Nobel de Literatura 1982, conocido por el realismo mágico.",
+                CreatedAt = DateTime.UtcNow
+            },
+            new Author
+            {
+                Name = "George Orwell",
+                Bio = "Escritor británico conocido por sus obras de crítica política y social.",
+                CreatedAt = DateTime.UtcNow
+            },
+            new Author
+            {
+                Name = "J.R.R. Tolkien",
+                Bio = "Escritor y filólogo británico, creador de la Tierra Media.",
+                CreatedAt = DateTime.UtcNow
+            },
+            new Author
+            {
+                Name = "Stephen Hawking",
+                Bio = "Físico teórico británico, conocido por sus trabajos sobre agujeros negros y cosmología.",
+                CreatedAt = DateTime.UtcNow
+            },
+            new Author
+            {
+                Name = "Yuval Noah Harari",
+                Bio = "Historiador y escritor israelí, autor de Sapiens y Homo Deus.",
+                CreatedAt = DateTime.UtcNow
+            }
+        );
+        db.SaveChanges();
+    }
+
+    private static void SeedBooks(ApplicationDbContext db)
+    {
+        if (db.Books.Any()) return;
+
+        var ficcion = db.Categories.First(c => c.Name == "Ficción");
+        var ciencia = db.Categories.First(c => c.Name == "Ciencia");
+        var historia = db.Categories.First(c => c.Name == "Historia");
+        var fantasia = db.Categories.First(c => c.Name == "Fantasía");
+        var tecnologia = db.Categories.First(c => c.Name == "Tecnología");
+
+        var garcia = db.Authors.First(a => a.Name == "Gabriel García Márquez");
+        var orwell = db.Authors.First(a => a.Name == "George Orwell");
+        var tolkien = db.Authors.First(a => a.Name == "J.R.R. Tolkien");
+        var hawking = db.Authors.First(a => a.Name == "Stephen Hawking");
+        var harari = db.Authors.First(a => a.Name == "Yuval Noah Harari");
+
+        db.Books.AddRange(
             new Book
             {
-                Title = "Cien Años de Soledad",
-                Description = "Novela clásica del realismo mágico",
-                Price = 350,
-                ISBN = "9781234567897",
+                Title = "Cien años de soledad",
+                Description = "La historia de la familia Buendía a lo largo de siete generaciones en el pueblo de Macondo.",
+                Price = 299.99m,
+                ISBN = "9780060883287",
+                Stock = 15,
+                ImgUrl = "https://placehold.co/300x300",
+                CategoryId = ficcion.Id,
+                AuthorId = garcia.Id,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Book
+            {
+                Title = "1984",
+                Description = "Una novela distópica sobre un régimen totalitario que controla cada aspecto de la vida.",
+                Price = 199.99m,
+                ISBN = "9780451524935",
+                Stock = 20,
+                ImgUrl = "https://placehold.co/300x300",
+                CategoryId = ficcion.Id,
+                AuthorId = orwell.Id,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Book
+            {
+                Title = "El señor de los anillos",
+                Description = "La épica historia de la Tierra Media y la lucha contra el señor oscuro Sauron.",
+                Price = 499.99m,
+                ISBN = "9780618640157",
                 Stock = 10,
-                CategoryId = categories[0].Id,
-                AuthorId = authors[0].Id
+                ImgUrl = "https://placehold.co/300x300",
+                CategoryId = fantasia.Id,
+                AuthorId = tolkien.Id,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Book
+            {
+                Title = "Breve historia del tiempo",
+                Description = "Una introducción accesible a la cosmología y los grandes misterios del universo.",
+                Price = 249.99m,
+                ISBN = "9780553380163",
+                Stock = 12,
+                ImgUrl = "https://placehold.co/300x300",
+                CategoryId = ciencia.Id,
+                AuthorId = hawking.Id,
+                CreatedAt = DateTime.UtcNow
             },
             new Book
             {
                 Title = "Sapiens",
-                Description = "Historia de la humanidad",
-                Price = 420,
-                ISBN = "9781234567898",
-                Stock = 15,
-                CategoryId = categories[2].Id,
-                AuthorId = authors[1].Id
-            },
-            new Book
-            {
-                Title = "Clean Code",
-                Description = "Buenas prácticas de programación",
-                Price = 500,
-                ISBN = "9781234567899",
-                Stock = 8,
-                CategoryId = categories[1].Id,
-                AuthorId = authors[2].Id
-            },
-            new Book
-            {
-                Title = "It",
-                Description = "Novela de terror",
-                Price = 300,
-                ISBN = "9781234567800",
-                Stock = 12,
-                CategoryId = categories[0].Id,
-                AuthorId = authors[3].Id
+                Description = "Un recorrido por la historia de la humanidad desde el homo sapiens hasta la actualidad.",
+                Price = 349.99m,
+                ISBN = "9780062316097",
+                Stock = 18,
+                ImgUrl = "https://placehold.co/300x300",
+                CategoryId = historia.Id,
+                AuthorId = harari.Id,
+                CreatedAt = DateTime.UtcNow
             }
-        };
+        );
+        db.SaveChanges();
+    }
 
-        appContext.Books.AddRange(books);
-        appContext.SaveChanges();
+    private static void SeedOrders(ApplicationDbContext db)
+    {
+        if (db.Orders.Any()) return;
 
-        // USERS (Identity)
-        var hasher = new PasswordHasher<ApplicationUser>();
+        var book1 = db.Books.First(b => b.ISBN == "9780060883287");
+        var book2 = db.Books.First(b => b.ISBN == "9780451524935");
+        var book3 = db.Books.First(b => b.ISBN == "9780062316097");
 
-        var user = new ApplicationUser
-        {
-            UserName = "admin@libros.com",
-            Email = "admin@libros.com",
-            Name = "Administrador"
-        };
-
-        user.PasswordHash = hasher.HashPassword(user, "Admin123*");
-
-        if (!appContext.Users.Any())
-        {
-            appContext.Users.Add(user);
-            appContext.SaveChanges();
-        }
-
-        // ORDER
         var order = new Order
         {
-            UserId = user.Id,
-            Total = 850,
-            Status = OrderStatus.Pending
-        };
-
-        appContext.Orders.Add(order);
-        appContext.SaveChanges();
-
-        // ORDER DETAILS
-        var orderDetails = new List<OrderDetail>
-        {
-            new OrderDetail
+            UserId = "user-client",
+            CreatedAt = DateTime.UtcNow,
+            Status = OrderStatus.Paid,
+            Total = book1.Price + (book2.Price * 2),
+            OrderDetails = new List<OrderDetail>
             {
-                OrderId = order.Id,
-                BookId = books[0].Id,
-                Quantity = 1,
-                Price = books[0].Price
-            },
-            new OrderDetail
-            {
-                OrderId = order.Id,
-                BookId = books[2].Id,
-                Quantity = 1,
-                Price = books[2].Price
+                new OrderDetail
+                {
+                    BookId = book1.Id,
+                    Quantity = 1,
+                    Price = book1.Price
+                },
+                new OrderDetail
+                {
+                    BookId = book2.Id,
+                    Quantity = 2,
+                    Price = book2.Price
+                }
             }
         };
 
-        appContext.OrderDetails.AddRange(orderDetails);
-        appContext.SaveChanges();
+        var order2 = new Order
+        {
+            UserId = "user-client",
+            CreatedAt = DateTime.UtcNow.AddDays(-5),
+            Status = OrderStatus.Pending,
+            Total = book3.Price,
+            OrderDetails = new List<OrderDetail>
+            {
+                new OrderDetail
+                {
+                    BookId = book3.Id,
+                    Quantity = 1,
+                    Price = book3.Price
+                }
+            }
+        };
 
-        // recalcular total 
-        order.Total = orderDetails.Sum(x => x.Price * x.Quantity);
-        appContext.SaveChanges();
+        db.Orders.AddRange(order, order2);
+        db.SaveChanges();
     }
 }

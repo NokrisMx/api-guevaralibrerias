@@ -168,3 +168,10 @@ E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\obj\Debug\net10.0\ApiGuevaraLibrerias.pdb
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\obj\Debug\net10.0\ApiGuevaraLibrerias.genruntimeconfig.cache
 E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\obj\Debug\net10.0\ref\ApiGuevaraLibrerias.dll
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\ApiGuevaraLibrerias.staticwebassets.runtime.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\web.config
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\ApiGuevaraLibrerias.deps.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\ApiGuevaraLibrerias.runtimeconfig.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\ApiGuevaraLibrerias.staticwebassets.endpoints.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\appsettings.Development.json
+E:\gueva\Documents\Desarrolloweb\DotNET\ApiGuevaraLibrerias\ApiGuevaraLibrerias\bin\Debug\net10.0\publish\appsettings.json

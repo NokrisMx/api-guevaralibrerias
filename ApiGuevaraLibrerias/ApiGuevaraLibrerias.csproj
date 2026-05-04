@@ -22,7 +22,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.OpenApi" Version="1.6.22"/>
+    <PackageReference Include="Microsoft.OpenApi" Version="1.6.22" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
   </ItemGroup>
 
@@ -33,7 +33,6 @@
     <Folder Include="Data\" />
     <Folder Include="Extensions\" />
     <Folder Include="Mapping\" />
-    <Folder Include="Repository\" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,44 @@
+# Build outputs
 bin/
 obj/
+
+# Visual Studio
 .vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docview
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Publicación
+publish/
+
+# Logs
+logs/
+*.log
+
+# Archivos de entorno y secretos 
+appsettings.Production.json
+
+# Imágenes subidas por usuarios
+wwwroot/BookImages/
+
+# Entity Framework
+*.db
+*.db-shm
+*.db-wal
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

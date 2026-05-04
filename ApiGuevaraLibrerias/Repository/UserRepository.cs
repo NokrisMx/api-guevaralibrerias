@@ -22,6 +22,45 @@ public class UserRepository : IUserRepository
         _configuration = configuration;
     }
 
+    public async Task<IEnumerable<UserDto>> GetUsers()
+    {
+        var users = _userManager.Users.ToList();
+
+        var result = new List<UserDto>();
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            result.Add(new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name ?? "",
+                Username = user.UserName ?? "",
+                Email = user.Email!,
+                PhoneNumber = user.PhoneNumber,
+                Role = roles.FirstOrDefault() ?? "User"
+            });
+        }
+        return result;
+    }
+
+    public async Task<UserDto?> GetUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+            return null;
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return new UserDto
+        {
+            Id = user.Id,
+            Name = user.Name ?? "",
+            Username = user.UserName ?? "",
+            Email = user.Email!,
+            PhoneNumber = user.PhoneNumber,
+            Role = roles.FirstOrDefault() ?? "User"
+        };
+    }
+
     public async Task<bool> UserExists(string email)
     {
         return await _userManager.FindByEmailAsync(email) != null;
@@ -55,6 +94,7 @@ public class UserRepository : IUserRepository
         {
             Id = user.Id,
             Name = user.Name ?? string.Empty,
+            Username = user.UserName,
             Email = user.Email,
             Role = dto.Role
         };
@@ -82,6 +122,46 @@ public class UserRepository : IUserRepository
             Name = user.Name,
             Username = user.UserName!,
             Role = role
+        };
+    }
+
+    public async Task<UserDto?> UpdateUser(string userId, UpdateUserDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return null;
+
+        if (!string.IsNullOrWhiteSpace(dto.Name))
+            user.Name = dto.Name;
+
+        if (!string.IsNullOrWhiteSpace(dto.Username))
+            user.UserName = dto.Username;
+
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            user.PhoneNumber = dto.PhoneNumber;
+
+        // Email necesita actualizarse con SetEmailAsync porque Identity
+        // maneja NormalizedEmail y tokens de confirmación internamente
+        if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != user.Email)
+        {
+            var emailResult = await _userManager.SetEmailAsync(user, dto.Email);
+            if (!emailResult.Succeeded)
+                return null;
+        }
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return null;
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return new UserDto
+        {
+            Id = user.Id,
+            Name = user.Name ?? "",
+            Username = user.UserName ?? "",
+            Email = user.Email!,
+            PhoneNumber = user.PhoneNumber,
+            Role = roles.FirstOrDefault() ?? "User"
         };
     }
 

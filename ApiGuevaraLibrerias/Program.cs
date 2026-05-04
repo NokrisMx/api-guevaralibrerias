@@ -12,9 +12,10 @@ var secretKey = builder.Configuration.GetValue<string>("ApiSettings:SecretKey");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-//builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 ApiGuevaraLibrerias.Mapping.MapsterConfig.RegisterMappings();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
@@ -28,7 +29,7 @@ var app = builder.Build();
 
 app.UseSwaggerConfiguration();
 
-//app.UseDatabaseMigrationWithSeedConfiguration();
+app.UseDatabaseMigrationWithSeedConfiguration();
 
 app.UseStaticFiles();
 
