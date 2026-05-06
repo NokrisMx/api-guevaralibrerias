@@ -154,8 +154,14 @@ namespace ApiGuevaraLibrerias.Migrations
                     b.Property<string>("ImgUrlLocal")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Pages")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PublisherId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
@@ -168,6 +174,9 @@ namespace ApiGuevaraLibrerias.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("YearPublished")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
@@ -176,6 +185,8 @@ namespace ApiGuevaraLibrerias.Migrations
 
                     b.HasIndex("ISBN")
                         .IsUnique();
+
+                    b.HasIndex("PublisherId");
 
                     b.ToTable("Books");
                 });
@@ -265,6 +276,33 @@ namespace ApiGuevaraLibrerias.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderDetails");
+                });
+
+            modelBuilder.Entity("ApiGuevaraLibrerias.Models.Publisher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Publishers");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -414,9 +452,17 @@ namespace ApiGuevaraLibrerias.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ApiGuevaraLibrerias.Models.Publisher", "Publisher")
+                        .WithMany("Books")
+                        .HasForeignKey("PublisherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Author");
 
                     b.Navigation("Category");
+
+                    b.Navigation("Publisher");
                 });
 
             modelBuilder.Entity("ApiGuevaraLibrerias.Models.Order", b =>
@@ -513,6 +559,11 @@ namespace ApiGuevaraLibrerias.Migrations
             modelBuilder.Entity("ApiGuevaraLibrerias.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
+                });
+
+            modelBuilder.Entity("ApiGuevaraLibrerias.Models.Publisher", b =>
+                {
+                    b.Navigation("Books");
                 });
 #pragma warning restore 612, 618
         }

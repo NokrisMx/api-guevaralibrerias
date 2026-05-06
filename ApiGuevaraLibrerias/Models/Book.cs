@@ -21,6 +21,9 @@ public class Book
     [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 
+    [Required]
+    public int Pages { get; set; }
+
     public string? ImgUrl { get; set; }
 
     public string? ImgUrlLocal { get; set; }
@@ -33,6 +36,9 @@ public class Book
     [Range(0, int.MaxValue)]
     public int Stock { get; set; }
 
+    [Required]
+    public DateTime YearPublished { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
@@ -43,5 +49,7 @@ public class Book
 
     public int AuthorId { get; set; }
     public Author Author { get; set; } = null!;
+    public int PublisherId { get; set; }
+    public Publisher Publisher { get; set; } = null!;
 
 }

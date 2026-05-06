@@ -83,6 +83,21 @@ namespace ApiGuevaraLibrerias.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Publishers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Publishers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -220,14 +235,17 @@ namespace ApiGuevaraLibrerias.Migrations
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Pages = table.Column<int>(type: "int", nullable: false),
                     ImgUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImgUrlLocal = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ISBN = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Stock = table.Column<int>(type: "int", nullable: false),
+                    YearPublished = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
-                    AuthorId = table.Column<int>(type: "int", nullable: false)
+                    AuthorId = table.Column<int>(type: "int", nullable: false),
+                    PublisherId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -242,6 +260,12 @@ namespace ApiGuevaraLibrerias.Migrations
                         name: "FK_Books_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Books_Publishers_PublisherId",
+                        column: x => x.PublisherId,
+                        principalTable: "Publishers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -336,6 +360,11 @@ namespace ApiGuevaraLibrerias.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Books_PublisherId",
+                table: "Books",
+                column: "PublisherId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
                 table: "Categories",
                 column: "Name",
@@ -355,6 +384,12 @@ namespace ApiGuevaraLibrerias.Migrations
                 name: "IX_Orders_UserId",
                 table: "Orders",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Publishers_Name",
+                table: "Publishers",
+                column: "Name",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -392,6 +427,9 @@ namespace ApiGuevaraLibrerias.Migrations
 
             migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Publishers");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

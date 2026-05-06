@@ -1,8 +1,10 @@
 using System.Text;
 using ApiEcommerce.Data;
 using ApiGuevaraLibrerias.Constants;
+using ApiGuevaraLibrerias.Models;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -125,15 +127,17 @@ public static class ServiceExtensions
         });
     }
 
-    public static void UseDatabaseMigrationWithSeedConfiguration(this IApplicationBuilder app)
+    public static async Task UseDatabaseMigrationWithSeedConfiguration(this IApplicationBuilder app)
     {
         using var scope = app.ApplicationServices.CreateScope();
 
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         db.Database.Migrate();
 
-        DataSeeder.SeedData(db);
+        await DataSeeder.SeedData(userManager, roleManager, db);
     }
 
     public static void UseSwaggerConfiguration(this WebApplication app)

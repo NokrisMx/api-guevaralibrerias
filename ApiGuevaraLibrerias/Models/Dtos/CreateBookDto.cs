@@ -16,6 +16,9 @@ public class CreateBookDto
     [Range(0, double.MaxValue, ErrorMessage = "El precio no puede ser negativo.")]
     public decimal Price { get; set; }
 
+    [Required(ErrorMessage = "La página es requerida")]
+    public int Pages { get; set; }
+
     public string? ImgUrl { get; set; }
 
     public IFormFile? Image { get; set; }
@@ -28,9 +31,16 @@ public class CreateBookDto
     [Range(0, int.MaxValue, ErrorMessage = "El stock no puede ser negativo.")]
     public int Stock { get; set; }
 
+    [Required(ErrorMessage = "El año de publicación es requerido.")]
+    public DateTime YearPublished { get; set; }
+
     [Required(ErrorMessage = "La categoría es obligatoria.")]
     public int CategoryId { get; set; }
 
     [Required(ErrorMessage = "El autor es obligatorio.")]
     public int AuthorId { get; set; }
+
+    [Required(ErrorMessage = "La editorial es obligatorio.")]
+    public int PublisherId { get; set; }
+
 }

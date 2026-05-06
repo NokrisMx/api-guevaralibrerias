@@ -17,15 +17,17 @@ public class BookController : ControllerBase
     private readonly IBookRepository _bookRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAuthorRepository _authorRepository;
+    private readonly IPublisherRepository _publisherRepository;
 
     public BookController(
         IBookRepository bookRepository,
         ICategoryRepository categoryRepository,
-        IAuthorRepository authorRepository)
+        IAuthorRepository authorRepository, IPublisherRepository publisherRepository)
     {
         _bookRepository = bookRepository;
         _categoryRepository = categoryRepository;
         _authorRepository = authorRepository;
+        _publisherRepository = publisherRepository;
     }
 
     [AllowAnonymous]
@@ -58,7 +60,7 @@ public class BookController : ControllerBase
     [HttpGet("page")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetBookInPage([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] int? categoryId = null, [FromQuery] int? authorId = null, [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null)
+    public async Task<IActionResult> GetBookInPage([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] int? categoryId = null, [FromQuery] int? authorId = null, [FromQuery] int? publisherId = null, [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null)
     {
         if (page <= 0 || pageSize <= 0)
             return BadRequest("La página y el tamaño deben ser mayores que 0");
@@ -72,6 +74,9 @@ public class BookController : ControllerBase
 
         if (authorId.HasValue)
             query = query.Where(b => b.AuthorId == authorId.Value);
+
+        if (publisherId.HasValue)
+            query = query.Where(b => b.PublisherId == publisherId.Value);
 
         if (minPrice.HasValue)
             query = query.Where(b => b.Price >= minPrice.Value);
@@ -133,15 +138,22 @@ public class BookController : ControllerBase
         if (!await _authorRepository.AuthorExists(dto.AuthorId))
             return NotFound($"El autor con ID {dto.AuthorId} no fue encontrado");
 
+        if (!await _publisherRepository.PublisherExists(dto.PublisherId))
+            return NotFound($"La editorial con ID {dto.PublisherId} no fue encontrado");
+
+
         var book = new Book
         {
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
+            Pages = dto.Pages,
             ISBN = dto.ISBN,
             Stock = dto.Stock,
+            YearPublished = dto.YearPublished,
             CategoryId = dto.CategoryId,
             AuthorId = dto.AuthorId,
+            PublisherId = dto.PublisherId,
             ImgUrl = dto.ImgUrl
         };
 
@@ -155,7 +167,7 @@ public class BookController : ControllerBase
         if (dto.Image != null)
             await _bookRepository.UpdateBook(created);
 
-        // Traer el libro completo con Author y Category
+        // Traer el libro completo con Author, Category y Publisher
         var bookWithRelations = await _bookRepository.GetBook(created.Id);
 
         return CreatedAtRoute("GetBook", new { id = created.Id }, bookWithRelations!.Adapt<BookDto>());
@@ -185,16 +197,22 @@ public class BookController : ControllerBase
         if (!await _authorRepository.AuthorExists(dto.AuthorId))
             return NotFound($"El autor con ID {dto.AuthorId} no fue encontrado");
 
+        if (!await _publisherRepository.PublisherExists(dto.PublisherId))
+            return NotFound($"La editorial con ID {dto.PublisherId} no fue encontrado");
+
         var book = new Book
         {
             Id = id,
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
+            Pages = dto.Pages,
             ISBN = dto.ISBN,
             Stock = dto.Stock,
+            YearPublished = dto.YearPublished,
             CategoryId = dto.CategoryId,
             AuthorId = dto.AuthorId,
+            PublisherId = dto.PublisherId,
             ImgUrl = dto.ImgUrl,
             ImgUrlLocal = dto.ImgUrlLocal
         };
@@ -207,7 +225,7 @@ public class BookController : ControllerBase
         if (updated == null)
             return NotFound($"El libro con ID {id} no fue encontrado");
 
-        // Traer el libro completo con Author y Category
+        // Traer el libro completo con Author, Category y Publisher
         var bookWithRelations = await _bookRepository.GetBook(updated.Id);
 
         return Ok(bookWithRelations!.Adapt<BookDto>());

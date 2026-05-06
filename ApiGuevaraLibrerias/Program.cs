@@ -16,6 +16,7 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 ApiGuevaraLibrerias.Mapping.MapsterConfig.RegisterMappings();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
@@ -29,7 +30,7 @@ var app = builder.Build();
 
 app.UseSwaggerConfiguration();
 
-app.UseDatabaseMigrationWithSeedConfiguration();
+await app.UseDatabaseMigrationWithSeedConfiguration();
 
 app.UseStaticFiles();
 

@@ -51,6 +51,7 @@ public class BookRepository : IBookRepository
         return await _db.Books
             .Include(b => b.Author)
             .Include(b => b.Category)
+            .Include(b => b.Publisher)
             .OrderBy(b => b.Title)
             .ToListAsync();
     }
@@ -60,6 +61,7 @@ public class BookRepository : IBookRepository
         return await _db.Books
             .Include(b => b.Author)
             .Include(b => b.Category)
+            .Include(b => b.Publisher)
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
@@ -81,10 +83,13 @@ public class BookRepository : IBookRepository
         existing.Title = book.Title;
         existing.Description = book.Description;
         existing.Price = book.Price;
+        existing.Pages = book.Pages;
         existing.ISBN = book.ISBN;
         existing.Stock = book.Stock;
+        existing.YearPublished = book.YearPublished;
         existing.CategoryId = book.CategoryId;
         existing.AuthorId = book.AuthorId;
+        existing.PublisherId = book.PublisherId;
         existing.ImgUrl = book.ImgUrl;
         existing.ImgUrlLocal = book.ImgUrlLocal;
         existing.UpdatedAt = DateTime.UtcNow;
