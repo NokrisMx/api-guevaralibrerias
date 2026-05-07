@@ -5,6 +5,7 @@ using Asp.Versioning;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiGuevaraLibrerias.Controllers.V1;
 
@@ -103,18 +104,38 @@ public class BookController : ControllerBase
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SearchBooks([FromQuery] string query)
+    public async Task<IActionResult> SearchBooks([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
+        if (page <= 0 || pageSize <= 0)
+            return BadRequest("La página y el tamaño deben ser mayores que 0");
+
         if (string.IsNullOrWhiteSpace(query))
             return BadRequest("El término de búsqueda es obligatorio");
 
-        var books = await _bookRepository.GetBooks();
+        query = query.Trim().ToLower();
 
-        var result = books
-            .Where(b => b.Title.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .Adapt<IEnumerable<BookDto>>();
+        var booksQuery = _bookRepository
+            .GetBooksQuery()
+            .Where(b =>
+               EF.Functions.Collate(b.Title, "SQL_Latin1_General_CP1_CI_AI").Contains(query) ||
+                EF.Functions.Collate(b.Author.Name, "SQL_Latin1_General_CP1_CI_AI").Contains(query) ||
+                EF.Functions.Collate(b.Category.Name, "SQL_Latin1_General_CP1_CI_AI").Contains(query)
+            );
 
-        return Ok(result);
+        var totalRecords = await booksQuery.CountAsync();
+
+        var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        var pagedBooks = await booksQuery.Skip((page - 1) * pageSize).Take(pageSize).ProjectToType<BookDto>().ToListAsync();
+
+        return Ok(new
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = totalPages,
+            Data = pagedBooks
+        });
     }
 
     [HttpPost]

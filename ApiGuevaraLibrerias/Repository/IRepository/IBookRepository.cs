@@ -6,6 +6,7 @@ public interface IBookRepository
 {
     Task<IEnumerable<Book>> GetBooks();
     Task<Book?> GetBook(int id);
+    IQueryable<Book> GetBooksQuery();
     Task<bool> BookExists(int id);
     Task<bool> BookExistsByISBN(string isbn, int excludeId = 0);
     Task<Book> CreateBook(Book book);

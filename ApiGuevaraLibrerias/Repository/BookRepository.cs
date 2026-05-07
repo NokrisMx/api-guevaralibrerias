@@ -65,6 +65,14 @@ public class BookRepository : IBookRepository
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
+    public IQueryable<Book> GetBooksQuery()
+    {
+        return _db.Books
+            .Include(b => b.Category)
+            .Include(b => b.Author)
+            .Include(b => b.Publisher)
+            .AsNoTracking();
+    }
     public async Task<Book?> UpdateBook(Book book)
     {
         var existing = await _db.Books.FirstOrDefaultAsync(b => b.Id == book.Id);
