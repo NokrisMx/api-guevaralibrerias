@@ -32,8 +32,9 @@ public class BookController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet]
+    [HttpGet("GetBooks")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Obsolete]
     public async Task<IActionResult> GetBooks()
     {
         var books = await _bookRepository.GetBooks();
@@ -58,75 +59,60 @@ public class BookController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("page")]
+    [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetBookInPage([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] int? categoryId = null, [FromQuery] int? authorId = null, [FromQuery] int? publisherId = null, [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null)
+    public async Task<IActionResult> GetBookInPage(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] string? query = null,
+    [FromQuery] int? categoryId = null,
+    [FromQuery] int? authorId = null,
+    [FromQuery] int? publisherId = null,
+    [FromQuery] decimal? minPrice = null,
+    [FromQuery] decimal? maxPrice = null)
     {
         if (page <= 0 || pageSize <= 0)
             return BadRequest("La página y el tamaño deben ser mayores que 0");
 
-        var books = await _bookRepository.GetBooks();
-        var query = books.AsQueryable();
+        var booksQuery = _bookRepository.GetBooksQuery();
 
-        // Aplicar filtros
-        if (categoryId.HasValue)
-            query = query.Where(b => b.CategoryId == categoryId.Value);
+        // BÚSQUEDA
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            query = query.Trim().ToLower();
 
-        if (authorId.HasValue)
-            query = query.Where(b => b.AuthorId == authorId.Value);
+            booksQuery = booksQuery.Where(b =>
+                EF.Functions.Collate(b.Title, "SQL_Latin1_General_CP1_CI_AI").Contains(query)
+            );
+        }
 
-        if (publisherId.HasValue)
-            query = query.Where(b => b.PublisherId == publisherId.Value);
+        // FILTROS
+        if (categoryId.HasValue && categoryId > 0)
+            booksQuery = booksQuery.Where(b => b.CategoryId == categoryId.Value);
+
+        if (authorId.HasValue && authorId > 0)
+            booksQuery = booksQuery.Where(b => b.AuthorId == authorId.Value);
+
+        if (publisherId.HasValue && publisherId > 0)
+            booksQuery = booksQuery.Where(b => b.PublisherId == publisherId.Value);
 
         if (minPrice.HasValue)
-            query = query.Where(b => b.Price >= minPrice.Value);
+            booksQuery = booksQuery.Where(b => b.Price >= minPrice.Value);
 
         if (maxPrice.HasValue)
-            query = query.Where(b => b.Price <= maxPrice.Value);
+            booksQuery = booksQuery.Where(b => b.Price <= maxPrice.Value);
 
-        var totalRecords = query.Count();
-        var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-
-        var pagedBooks = query.Skip((page - 1) * pageSize).Take(pageSize).Adapt<IEnumerable<BookDto>>();
-
-        return Ok(new
-        {
-            Page = page,
-            PageSize = pageSize,
-            TotalRecords = totalRecords,
-            TotalPages = totalPages,
-            Data = pagedBooks
-        });
-    }
-
-    [AllowAnonymous]
-    [HttpGet("search")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SearchBooks([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-    {
-        if (page <= 0 || pageSize <= 0)
-            return BadRequest("La página y el tamaño deben ser mayores que 0");
-
-        if (string.IsNullOrWhiteSpace(query))
-            return BadRequest("El término de búsqueda es obligatorio");
-
-        query = query.Trim().ToLower();
-
-        var booksQuery = _bookRepository
-            .GetBooksQuery()
-            .Where(b =>
-               EF.Functions.Collate(b.Title, "SQL_Latin1_General_CP1_CI_AI").Contains(query) ||
-                EF.Functions.Collate(b.Author.Name, "SQL_Latin1_General_CP1_CI_AI").Contains(query) ||
-                EF.Functions.Collate(b.Category.Name, "SQL_Latin1_General_CP1_CI_AI").Contains(query)
-            );
-
+        // PAGINACIÓN
         var totalRecords = await booksQuery.CountAsync();
 
         var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
 
-        var pagedBooks = await booksQuery.Skip((page - 1) * pageSize).Take(pageSize).ProjectToType<BookDto>().ToListAsync();
+        var pagedBooks = await booksQuery
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ProjectToType<BookDto>()
+            .ToListAsync();
 
         return Ok(new
         {
