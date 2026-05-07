@@ -117,6 +117,7 @@ public class UserRepository : IUserRepository
 
         return new AuthResponseDto
         {
+            Id = user.Id,
             Token = token,
             Email = user.Email!,
             Name = user.Name,
