@@ -1,14 +1,16 @@
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 
 namespace ApiGuevaraLibrerias.Repository.IRepository;
 
 public interface ICategoryRepository
 {
-    Task<IEnumerable<Category>> GetCategories();
-    Task<Category?> GetCategory(int id);
+    Task<ApiResponse<IEnumerable<CategoryDto>>> GetCategories();
+    Task<ApiResponse<CategoryDto>> GetCategory(int id);
     Task<bool> CategoryExists(int id);
     Task<bool> CategoryExistsByName(string name, int excludeId = 0);
-    Task<Category> CreateCategory(Category category);
-    Task<Category?> UpdateCategory(Category category);
-    Task<bool> DeleteCategory(int id);
+    Task<ApiResponse<CategoryDto>> CreateCategory(Category category);
+    Task<ApiResponse<CategoryDto>> UpdateCategory(Category category);
+    Task<ApiResponse<bool>> DeleteCategory(int id);
 }

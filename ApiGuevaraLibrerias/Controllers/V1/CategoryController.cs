@@ -27,9 +27,9 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCategories()
         {
-            var categories = await _categoryRepository.GetCategories();
-            var categoryDtos = categories.Adapt<IEnumerable<CategoryDto>>();
-            return Ok(categoryDtos);
+            var response = await _categoryRepository.GetCategories();
+
+            return Ok(response);
         }
 
         [AllowAnonymous]
@@ -40,14 +40,12 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCategory(int id)
         {
-            if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
-            var category = await _categoryRepository.GetCategory(id);
-            if (category == null)
-                return NotFound($"La categoría con ID {id} no fue encontrada");
+            var response = await _categoryRepository.GetCategory(id);
 
-            var categoryDto = category.Adapt<CategoryDto>();
-            return Ok(categoryDto);
+            if (!response.Success)
+                return NotFound(response);
+
+            return Ok(response);
         }
 
         [HttpPost]
@@ -61,12 +59,16 @@ namespace ApiGuevaraLibrerias.Controllers.V1
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _categoryRepository.CategoryExistsByName(dto.Name))
-                return Conflict($"La categoría '{dto.Name}' ya existe");
+            var response = await _categoryRepository.CreateCategory(dto.Adapt<Category>());
 
-            var created = await _categoryRepository.CreateCategory(dto.Adapt<Category>());
+            if (!response.Success)
+                return BadRequest(response);
 
-            return CreatedAtRoute("GetCategory", new { id = created.Id }, created.Adapt<CategoryDto>());
+            return CreatedAtRoute(
+                "GetCategory",
+                new { id = response.Data!.Id },
+                response
+            );
         }
 
         [HttpPut("{id:int}", Name = "UpdateCategory")]
@@ -78,23 +80,17 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDto dto)
         {
-            if (id <= 0)
-                return BadRequest("ID inválido");
-
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Se excluye el ID actual para permitir guardar con el mismo nombre
-            if (await _categoryRepository.CategoryExistsByName(dto.Name, excludeId: id))
-                return Conflict($"La categoría '{dto.Name}' ya existe");
-
             var category = new Category { Id = id, Name = dto.Name };
-            var updated = await _categoryRepository.UpdateCategory(category);
 
-            if (updated == null)
-                return NotFound($"La categoría con ID {id} no fue encontrada");
+            var response = await _categoryRepository.UpdateCategory(category);
 
-            return Ok(updated.Adapt<CategoryDto>());
+            if (!response.Success)
+                return BadRequest(response);
+
+            return Ok(response);
         }
 
         [HttpDelete("{id:int}", Name = "DeleteCategory")]
@@ -105,18 +101,12 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
+            var response = await _categoryRepository.DeleteCategory(id);
 
-            if (!await _categoryRepository.CategoryExists(id))
-                return NotFound($"La categoría con ID {id} no fue encontrada");
+            if (!response.Success)
+                return NotFound(response);
 
-            var deleted = await _categoryRepository.DeleteCategory(id);
-
-            if (!deleted)
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error al eliminar la categoría");
-
-            return Ok(new { message = $"La categoría con ID {id} fue eliminada correctamente" });
+            return Ok(response);
         }
 
 

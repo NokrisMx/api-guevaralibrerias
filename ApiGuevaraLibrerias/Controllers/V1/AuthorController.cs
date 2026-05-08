@@ -26,8 +26,8 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAuthors()
         {
-            var authors = await _authorRepository.GetAuthors();
-            return Ok(authors.Adapt<IEnumerable<AuthorDto>>());
+            var response = await _authorRepository.GetAuthors();
+            return Ok(response);
         }
 
         [AllowAnonymous]
@@ -37,14 +37,12 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAuthor(int id)
         {
-            if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
+            var response = await _authorRepository.GetAuthor(id);
 
-            var author = await _authorRepository.GetAuthor(id);
-            if (author == null)
-                return NotFound($"El autor con ID {id} no fue encontrado");
+            if (!response.Success)
+                return NotFound(response);
 
-            return Ok(author.Adapt<AuthorDetailDto>());
+            return Ok(response);
         }
 
         [HttpPost]
@@ -55,15 +53,16 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> CreateAuthor([FromBody] CreateAuthorDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var response = await _authorRepository.CreateAuthor(dto.Adapt<Author>());
 
-            if (await _authorRepository.AuthorExistsByName(dto.Name))
-                return Conflict($"El autor '{dto.Name}' ya existe");
+            if (!response.Success)
+                return BadRequest(response);
 
-            var created = await _authorRepository.CreateAuthor(dto.Adapt<Author>());
-
-            return CreatedAtRoute("GetAuthor", new { id = created.Id }, created.Adapt<AuthorDto>());
+            return CreatedAtRoute(
+                "GetAuthor",
+                new { id = response.Data!.Id },
+                response
+            );
         }
 
         [HttpPut("{id:int}", Name = "UpdateAuthor")]
@@ -75,22 +74,19 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> UpdateAuthor(int id, [FromBody] UpdateAuthorDto dto)
         {
-            if (id <= 0)
-                return BadRequest("ID inválido");
+            var author = new Author
+            {
+                Id = id,
+                Name = dto.Name,
+                Bio = dto.Bio
+            };
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var response = await _authorRepository.UpdateAuthor(author);
 
-            if (await _authorRepository.AuthorExistsByName(dto.Name, excludeId: id))
-                return Conflict($"El autor '{dto.Name}' ya existe");
+            if (!response.Success)
+                return BadRequest(response);
 
-            var author = new Author { Id = id, Name = dto.Name, Bio = dto.Bio };
-            var updated = await _authorRepository.UpdateAuthor(author);
-
-            if (updated == null)
-                return NotFound($"El autor con ID {id} no fue encontrado");
-
-            return Ok(updated.Adapt<AuthorDto>());
+            return Ok(response);
         }
 
         [HttpDelete("{id:int}", Name = "DeleteAuthor")]
@@ -101,18 +97,12 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
-            if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
+            var response = await _authorRepository.DeleteAuthor(id);
 
-            if (!await _authorRepository.AuthorExists(id))
-                return NotFound($"El autor con ID {id} no fue encontrado");
+            if (!response.Success)
+                return NotFound(response);
 
-            var deleted = await _authorRepository.DeleteAuthor(id);
-
-            if (!deleted)
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error al eliminar el autor");
-
-            return Ok(new { message = $"El autor con ID {id} fue eliminado correctamente" });
+            return Ok(response);
         }
 
 

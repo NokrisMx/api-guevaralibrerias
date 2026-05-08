@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Mapster;
 using Asp.Versioning;
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Responses;
 
 namespace ApiGuevaraLibrerias.Controllers.V1
 {
@@ -25,9 +26,9 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPublishers()
         {
-            var publishers = await _publisherRepository.GetPublishers();
-            var publisherDtos = publishers.Adapt<IEnumerable<PublisherDto>>();
-            return Ok(publisherDtos);
+            var response = await _publisherRepository.GetPublishers();
+
+            return Ok(response);
         }
 
         [AllowAnonymous]
@@ -39,13 +40,20 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         public async Task<IActionResult> GetPublisher(int id)
         {
             if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
-            var publisher = await _publisherRepository.GetPublisher(id);
-            if (publisher == null)
-                return NotFound($"La editorial con ID {id} no fue encontrada");
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "El ID debe ser mayor que 0"
+                });
+            }
 
-            var publisherDto = publisher.Adapt<PublisherDto>();
-            return Ok(publisherDto);
+            var response = await _publisherRepository.GetPublisher(id);
+
+            if (!response.Success)
+                return NotFound(response);
+
+            return Ok(response);
         }
 
         [HttpPost]
@@ -59,12 +67,17 @@ namespace ApiGuevaraLibrerias.Controllers.V1
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _publisherRepository.PublisherExistsByName(dto.Name))
-                return Conflict($"La editorial '{dto.Name}' ya existe");
+            var response = await _publisherRepository
+                .CreatePublisher(dto.Adapt<Publisher>());
 
-            var created = await _publisherRepository.CreatePublisher(dto.Adapt<Publisher>());
+            if (!response.Success)
+                return Conflict(response);
 
-            return CreatedAtRoute("GetPublisher", new { id = created.Id }, created.Adapt<PublisherDto>());
+            return CreatedAtRoute(
+                "GetPublisher",
+                new { id = response.Data!.Id },
+                response
+            );
         }
 
         [HttpPut("{id:int}", Name = "UpdatePublisher")]
@@ -77,22 +90,29 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         public async Task<IActionResult> UpdatePublisher(int id, [FromBody] UpdatePublisherDto dto)
         {
             if (id <= 0)
-                return BadRequest("ID inválido");
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ID inválido"
+                });
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Se excluye el ID actual para permitir guardar con el mismo nombre
-            if (await _publisherRepository.PublisherExistsByName(dto.Name, excludeId: id))
-                return Conflict($"La editorial '{dto.Name}' ya existe");
+            var publisher = new Publisher
+            {
+                Id = id,
+                Name = dto.Name
+            };
 
-            var publisher = new Publisher { Id = id, Name = dto.Name };
-            var updated = await _publisherRepository.UpdatePublisher(publisher);
+            var response = await _publisherRepository.UpdatePublisher(publisher);
 
-            if (updated == null)
-                return NotFound($"La editorial con ID {id} no fue encontrada");
+            if (!response.Success)
+                return NotFound(response);
 
-            return Ok(updated.Adapt<PublisherDto>());
+            return Ok(response);
         }
 
         [HttpDelete("{id:int}", Name = "DeletePublisher")]
@@ -104,17 +124,20 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         public async Task<IActionResult> DeletePublisher(int id)
         {
             if (id <= 0)
-                return BadRequest("El ID debe ser mayor que 0");
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "El ID debe ser mayor que 0"
+                });
+            }
 
-            if (!await _publisherRepository.PublisherExists(id))
-                return NotFound($"La editorial con ID {id} no fue encontrada");
+            var response = await _publisherRepository.DeletePublisher(id);
 
-            var deleted = await _publisherRepository.DeletePublisher(id);
+            if (!response.Success)
+                return NotFound(response);
 
-            if (!deleted)
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error al eliminar la editorial");
-
-            return Ok(new { message = $"La editorial con ID {id} fue eliminada correctamente" });
+            return Ok(response);
         }
 
     }

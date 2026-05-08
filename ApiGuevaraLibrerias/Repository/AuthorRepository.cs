@@ -1,5 +1,8 @@
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiGuevaraLibrerias.Repository;
@@ -22,43 +25,129 @@ public class AuthorRepository : IAuthorRepository
         return await _db.Authors.AnyAsync(c => c.Name.ToLower().Trim() == name.ToLower().Trim() && c.Id != excludeId);
     }
 
-    public async Task<Author> CreateAuthor(Author author)
+    public async Task<ApiResponse<IEnumerable<AuthorDto>>> GetAuthors()
     {
+        var authors = await _db.Authors.OrderBy(a => a.Name).ProjectToType<AuthorDto>().ToListAsync();
+
+        return new ApiResponse<IEnumerable<AuthorDto>>
+        {
+            Success = true,
+            Message = "Autores obtenidos correctamente",
+            Data = authors
+        };
+    }
+
+    public async Task<ApiResponse<AuthorDto>> GetAuthor(int id)
+    {
+        var author = await _db.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.Id == id);
+
+        if (author == null)
+        {
+            return new ApiResponse<AuthorDto>
+            {
+                Success = false,
+                Message = "Autor no encontrado",
+                Data = null
+            };
+        }
+
+        return new ApiResponse<AuthorDto>
+        {
+            Success = true,
+            Message = "Autor obtenido correctamente",
+            Data = author.Adapt<AuthorDto>()
+        };
+    }
+
+    public async Task<ApiResponse<AuthorDto>> CreateAuthor(Author author)
+    {
+        if (await AuthorExistsByName(author.Name))
+        {
+            return new ApiResponse<AuthorDto>
+            {
+                Success = false,
+                Message = "El autor ya existe",
+                Data = null
+            };
+        }
+
         author.CreatedAt = DateTime.UtcNow;
+
         await _db.Authors.AddAsync(author);
         await _db.SaveChangesAsync();
-        return author;
+
+        return new ApiResponse<AuthorDto>
+        {
+            Success = true,
+            Message = "Autor creado correctamente",
+            Data = author.Adapt<AuthorDto>()
+        };
     }
 
-    public async Task<bool> DeleteAuthor(int id)
-    {
-        var author = await _db.Authors.FirstOrDefaultAsync(c => c.Id == id);
-        if (author == null)
-            return false;
-        _db.Authors.Remove(author);
-        return await _db.SaveChangesAsync() > 0;
-    }
 
-    public async Task<Author?> GetAuthor(int id)
+    public async Task<ApiResponse<AuthorDto>> UpdateAuthor(Author author)
     {
-        return await _db.Authors.Include(a => a.Books).FirstOrDefaultAsync(c => c.Id == id);
-    }
+        var existingAuthor = await _db.Authors
+            .FirstOrDefaultAsync(a => a.Id == author.Id);
 
-    public async Task<IEnumerable<Author>> GetAuthors()
-    {
-        return await _db.Authors.OrderBy(c => c.Name).ToListAsync();
-    }
-
-    public async Task<Author?> UpdateAuthor(Author author)
-    {
-        var existingAuthor = await _db.Authors.FirstOrDefaultAsync(c => c.Id == author.Id);
         if (existingAuthor == null)
-            return null;
-        // Actualizar solo campos necesarios
+        {
+            return new ApiResponse<AuthorDto>
+            {
+                Success = false,
+                Message = "Autor no encontrado",
+                Data = null
+            };
+        }
+
+        if (await AuthorExistsByName(author.Name, author.Id))
+        {
+            return new ApiResponse<AuthorDto>
+            {
+                Success = false,
+                Message = "El autor ya existe",
+                Data = null
+            };
+        }
+
         existingAuthor.Name = author.Name;
         existingAuthor.Bio = author.Bio;
         existingAuthor.UpdatedAt = DateTime.UtcNow;
+
         await _db.SaveChangesAsync();
-        return existingAuthor;
+
+        return new ApiResponse<AuthorDto>
+        {
+            Success = true,
+            Message = "Autor actualizado correctamente",
+            Data = existingAuthor.Adapt<AuthorDto>()
+        };
+    }
+
+    public async Task<ApiResponse<bool>> DeleteAuthor(int id)
+    {
+        var author = await _db.Authors
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (author == null)
+        {
+            return new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Autor no encontrado",
+                Data = false
+            };
+        }
+
+        _db.Authors.Remove(author);
+
+        await _db.SaveChangesAsync();
+
+        return new ApiResponse<bool>
+        {
+            Success = true,
+            Message = "Autor eliminado correctamente",
+            Data = true
+        };
     }
 }
