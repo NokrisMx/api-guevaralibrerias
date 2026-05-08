@@ -1,9 +1,11 @@
 using ApiGuevaraLibrerias.Constants;
 using ApiGuevaraLibrerias.Extensions;
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository;
 using ApiGuevaraLibrerias.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,29 @@ ApiGuevaraLibrerias.Mapping.MapsterConfig.RegisterMappings();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(x => x.Value!.Errors.Count > 0)
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value!.Errors
+                    .Select(e => e.ErrorMessage)
+                    .ToArray()
+            );
+
+        var response = new ApiResponse<object>
+        {
+            Success = false,
+            Message = "Errores de validación",
+            Data = errors
+        };
+
+        return new BadRequestObjectResult(response);
+    };
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddApiVersioningConfiguration();

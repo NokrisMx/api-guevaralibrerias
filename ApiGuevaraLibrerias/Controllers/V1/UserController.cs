@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -48,18 +49,12 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var response = await _userRepository.Register(dto);
 
-            if (await _userRepository.UserExists(dto.Email))
-                return Conflict($"El correo '{dto.Email}' ya está registrado");
+            if (!response.Success)
+                return BadRequest(response);
 
-            var user = await _userRepository.Register(dto);
-
-            if (user == null)
-                return BadRequest("Error al registrar el usuario");
-
-            return StatusCode(StatusCodes.Status201Created, user);
+            return StatusCode(StatusCodes.Status201Created, response);
         }
 
         [HttpPost("login")]
@@ -68,13 +63,10 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var response = await _userRepository.Login(dto);
 
-            if (response == null)
-                return Unauthorized("Correo o contraseña incorrectos");
+            if (!response.Success)
+                return Unauthorized(response);
 
             return Ok(response);
         }
@@ -87,18 +79,24 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Usuario no autenticado");
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Usuario no autenticado"
+                });
+            }
 
-            var updated = await _userRepository.UpdateUser(userId, dto);
-            if (updated == null)
-                return NotFound("Usuario no encontrado");
+            var response = await _userRepository.UpdateUser(userId, dto);
 
-            return Ok(updated);
+            if (!response.Success)
+                return BadRequest(response);
+
+            return Ok(response);
         }
     }
 }

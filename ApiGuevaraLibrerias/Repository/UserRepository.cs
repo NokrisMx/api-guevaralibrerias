@@ -3,8 +3,10 @@ using System.Security.Claims;
 using System.Text;
 using ApiGuevaraLibrerias.Models;
 using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ApiGuevaraLibrerias.Repository;
@@ -22,14 +24,16 @@ public class UserRepository : IUserRepository
         _configuration = configuration;
     }
 
-    public async Task<IEnumerable<UserDto>> GetUsers()
+    public async Task<ApiResponse<IEnumerable<UserDto>>> GetUsers()
     {
         var users = _userManager.Users.ToList();
 
         var result = new List<UserDto>();
+
         foreach (var user in users)
         {
             var roles = await _userManager.GetRolesAsync(user);
+
             result.Add(new UserDto
             {
                 Id = user.Id,
@@ -40,17 +44,31 @@ public class UserRepository : IUserRepository
                 Role = roles.FirstOrDefault() ?? "User"
             });
         }
-        return result;
+        return new ApiResponse<IEnumerable<UserDto>>
+        {
+            Success = true,
+            Message = "Usuarios obtenidos correctamente",
+            Data = result
+        };
     }
 
-    public async Task<UserDto?> GetUser(string id)
+    public async Task<ApiResponse<UserDto>> GetUser(string id)
     {
         var user = await _userManager.FindByIdAsync(id);
+
         if (user == null)
-            return null;
+        {
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = "Usuario no encontrado",
+                Data = null
+            };
+        }
 
         var roles = await _userManager.GetRolesAsync(user);
-        return new UserDto
+
+        var userDto = new UserDto
         {
             Id = user.Id,
             Name = user.Name ?? "",
@@ -59,6 +77,13 @@ public class UserRepository : IUserRepository
             PhoneNumber = user.PhoneNumber,
             Role = roles.FirstOrDefault() ?? "User"
         };
+
+        return new ApiResponse<UserDto>
+        {
+            Success = true,
+            Message = "Usuario obtenido correctamente",
+            Data = userDto
+        };
     }
 
     public async Task<bool> UserExists(string email)
@@ -66,10 +91,31 @@ public class UserRepository : IUserRepository
         return await _userManager.FindByEmailAsync(email) != null;
     }
 
-    public async Task<UserDto?> Register(UserRegisterDto dto)
+    public async Task<ApiResponse<UserDto>> Register(UserRegisterDto dto)
     {
-        if (await UserExists(dto.Email))
-            return null;
+        var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
+
+        if (existingEmail != null)
+        {
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = "El correo electrónico ya está registrado",
+                Data = null
+            };
+        }
+
+        var existingUsername = await _userManager.FindByNameAsync(dto.Username);
+
+        if (existingUsername != null)
+        {
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = "El nombre de usuario ya está en uso",
+                Data = null
+            };
+        }
 
         var user = new ApplicationUser
         {
@@ -80,89 +126,193 @@ public class UserRepository : IUserRepository
         };
 
         var result = await _userManager.CreateAsync(user, dto.Password);
+
         if (!result.Succeeded)
-            return null;
+        {
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = result.Errors.FirstOrDefault()?.Description
+                    ?? "No se pudo registrar el usuario",
+                Data = null
+            };
+        }
 
-        // Crear el rol si no existe
+        // Crear rol si no existe
         if (!await _roleManager.RoleExistsAsync(dto.Role))
+        {
             await _roleManager.CreateAsync(new IdentityRole(dto.Role));
+        }
 
-        // Asignar el rol al usuario
+        // Asignar rol
         await _userManager.AddToRoleAsync(user, dto.Role);
 
-        return new UserDto
+        var userDto = new UserDto
         {
             Id = user.Id,
             Name = user.Name ?? string.Empty,
-            Username = user.UserName,
-            Email = user.Email,
+            Username = user.UserName ?? "",
+            Email = user.Email ?? "",
             Role = dto.Role
+        };
+
+        return new ApiResponse<UserDto>
+        {
+            Success = true,
+            Message = "Usuario registrado correctamente",
+            Data = userDto
         };
     }
 
-    public async Task<AuthResponseDto?> Login(UserLoginDto dto)
+    public async Task<ApiResponse<AuthResponseDto>> Login(UserLoginDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
+
         if (user == null)
-            return null;
+        {
+            return new ApiResponse<AuthResponseDto>
+            {
+                Success = false,
+                Message = "Correo o contraseña incorrectos",
+                Data = null
+            };
+        }
 
         var isValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+
         if (!isValid)
-            return null;
+        {
+            return new ApiResponse<AuthResponseDto>
+            {
+                Success = false,
+                Message = "Correo o contraseña incorrectos",
+                Data = null
+            };
+        }
 
         var roles = await _userManager.GetRolesAsync(user);
+
         var role = roles.FirstOrDefault() ?? "User";
 
         var token = GenerateJwtToken(user, role);
 
-        return new AuthResponseDto
+        var authResponse = new AuthResponseDto
         {
             Id = user.Id,
             Token = token,
             Email = user.Email!,
             Name = user.Name,
             Username = user.UserName!,
+            PhoneNumber = user.PhoneNumber,
             Role = role
+        };
+        return new ApiResponse<AuthResponseDto>
+        {
+            Success = true,
+            Message = "Inicio de sesión exitoso",
+            Data = authResponse
         };
     }
 
-    public async Task<UserDto?> UpdateUser(string userId, UpdateUserDto dto)
+    public async Task<ApiResponse<UserDto>> UpdateUser(string userId, UpdateUserDto dto)
     {
         var user = await _userManager.FindByIdAsync(userId);
+
         if (user == null)
-            return null;
+        {
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = "Usuario no encontrado",
+                Data = null
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Username))
+        {
+            var existingUsername = await _userManager.FindByNameAsync(dto.Username);
+
+            if (existingUsername != null && existingUsername.Id != user.Id)
+            {
+                return new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "El nombre de usuario ya está en uso",
+                    Data = null
+                };
+            }
+
+            user.UserName = dto.Username;
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Email))
+        {
+            var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (existingEmail != null && existingEmail.Id != user.Id)
+            {
+                return new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "El correo electrónico ya está registrado",
+                    Data = null
+                };
+            }
+
+            user.Email = dto.Email;
+            user.NormalizedEmail = dto.Email.ToUpper();
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            var existingPhone = await _userManager.Users
+                .FirstOrDefaultAsync(u =>
+                    u.PhoneNumber == dto.PhoneNumber &&
+                    u.Id != user.Id);
+
+            if (existingPhone != null)
+            {
+                return new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "El número telefónico ya está registrado",
+                    Data = null
+                };
+            }
+
+            user.PhoneNumber = dto.PhoneNumber;
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
             user.Name = dto.Name;
 
-        if (!string.IsNullOrWhiteSpace(dto.Username))
-            user.UserName = dto.Username;
+        var result = await _userManager.UpdateAsync(user);
 
-        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-            user.PhoneNumber = dto.PhoneNumber;
-
-        // Email necesita actualizarse con SetEmailAsync porque Identity
-        // maneja NormalizedEmail y tokens de confirmación internamente
-        if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != user.Email)
+        if (!result.Succeeded)
         {
-            var emailResult = await _userManager.SetEmailAsync(user, dto.Email);
-            if (!emailResult.Succeeded)
-                return null;
+            return new ApiResponse<UserDto>
+            {
+                Success = false,
+                Message = "No se pudo actualizar el usuario",
+                Data = null
+            };
         }
 
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return null;
-
         var roles = await _userManager.GetRolesAsync(user);
-        return new UserDto
+
+        return new ApiResponse<UserDto>
         {
-            Id = user.Id,
-            Name = user.Name ?? "",
-            Username = user.UserName ?? "",
-            Email = user.Email!,
-            PhoneNumber = user.PhoneNumber,
-            Role = roles.FirstOrDefault() ?? "User"
+            Success = true,
+            Message = "Perfil actualizado correctamente",
+            Data = new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name ?? "",
+                Username = user.UserName ?? "",
+                Email = user.Email ?? "",
+                PhoneNumber = user.PhoneNumber,
+                Role = roles.FirstOrDefault() ?? "User"
+            }
         };
     }
 
