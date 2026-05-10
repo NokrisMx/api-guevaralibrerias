@@ -31,7 +31,7 @@ public class CategoryRepository : ICategoryRepository
         return new ApiResponse<IEnumerable<CategoryDto>>
         {
             Success = true,
-            Message = "Categorías obtenidas correctamente",
+            Message = "Categorías obtenidas correctamente.",
             Data = categories
         };
     }
@@ -45,7 +45,7 @@ public class CategoryRepository : ICategoryRepository
             return new ApiResponse<CategoryDto>
             {
                 Success = false,
-                Message = "Categoría no encontrada",
+                Message = "Categoría no encontrada.",
                 Data = null
             };
         }
@@ -53,7 +53,7 @@ public class CategoryRepository : ICategoryRepository
         return new ApiResponse<CategoryDto>
         {
             Success = true,
-            Message = "Categoría obtenida correctamente",
+            Message = "Categoría obtenida correctamente.",
             Data = category.Adapt<CategoryDto>()
         };
     }
@@ -65,7 +65,7 @@ public class CategoryRepository : ICategoryRepository
             return new ApiResponse<CategoryDto>
             {
                 Success = false,
-                Message = "La categoría ya existe",
+                Message = "La categoría ya existe.",
                 Data = null
             };
         }
@@ -78,7 +78,7 @@ public class CategoryRepository : ICategoryRepository
         return new ApiResponse<CategoryDto>
         {
             Success = true,
-            Message = "Categoría creada correctamente",
+            Message = "Categoría creada correctamente.",
             Data = category.Adapt<CategoryDto>()
         };
     }
@@ -92,7 +92,7 @@ public class CategoryRepository : ICategoryRepository
             return new ApiResponse<CategoryDto>
             {
                 Success = false,
-                Message = "Categoría no encontrada",
+                Message = "Categoría no encontrada.",
                 Data = null
             };
         }
@@ -102,7 +102,7 @@ public class CategoryRepository : ICategoryRepository
             return new ApiResponse<CategoryDto>
             {
                 Success = false,
-                Message = "La categoría ya existe",
+                Message = "La categoría ya existe.",
                 Data = null
             };
         }
@@ -115,7 +115,7 @@ public class CategoryRepository : ICategoryRepository
         return new ApiResponse<CategoryDto>
         {
             Success = true,
-            Message = "Categoría actualizada correctamente",
+            Message = "Categoría actualizada correctamente.",
             Data = existingCategory.Adapt<CategoryDto>()
         };
     }
@@ -129,7 +129,7 @@ public class CategoryRepository : ICategoryRepository
             return new ApiResponse<bool>
             {
                 Success = false,
-                Message = "Categoría no encontrada",
+                Message = "Categoría no encontrada.",
                 Data = false
             };
         }
@@ -141,7 +141,7 @@ public class CategoryRepository : ICategoryRepository
         return new ApiResponse<bool>
         {
             Success = true,
-            Message = "Categoría eliminada correctamente",
+            Message = "Categoría eliminada correctamente.",
             Data = true
         };
     }

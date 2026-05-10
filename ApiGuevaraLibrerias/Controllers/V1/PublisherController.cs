@@ -44,7 +44,7 @@ namespace ApiGuevaraLibrerias.Controllers.V1
                 return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "El ID debe ser mayor que 0"
+                    Message = "El ID debe ser mayor que 0."
                 });
             }
 
@@ -94,7 +94,7 @@ namespace ApiGuevaraLibrerias.Controllers.V1
                 return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "ID inválido"
+                    Message = "ID inválido."
                 });
             }
 
@@ -128,7 +128,7 @@ namespace ApiGuevaraLibrerias.Controllers.V1
                 return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "El ID debe ser mayor que 0"
+                    Message = "El ID debe ser mayor que 0."
                 });
             }
 

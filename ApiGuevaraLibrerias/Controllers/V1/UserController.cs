@@ -38,7 +38,7 @@ namespace ApiGuevaraLibrerias.Controllers.V1
         {
             var user = await _userRepository.GetUser(id);
             if (user == null)
-                return NotFound($"El usuario con ID {id} no fue encontrado");
+                return NotFound($"El usuario con ID {id} no fue encontrado.");
 
             return Ok(user);
         }
@@ -87,7 +87,7 @@ namespace ApiGuevaraLibrerias.Controllers.V1
                 return Unauthorized(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "Usuario no autenticado"
+                    Message = "Usuario no autenticado."
                 });
             }
 

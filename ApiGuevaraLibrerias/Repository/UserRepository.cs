@@ -47,7 +47,7 @@ public class UserRepository : IUserRepository
         return new ApiResponse<IEnumerable<UserDto>>
         {
             Success = true,
-            Message = "Usuarios obtenidos correctamente",
+            Message = "Usuarios obtenidos correctamente.",
             Data = result
         };
     }
@@ -61,7 +61,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<UserDto>
             {
                 Success = false,
-                Message = "Usuario no encontrado",
+                Message = "Usuario no encontrado.",
                 Data = null
             };
         }
@@ -81,7 +81,7 @@ public class UserRepository : IUserRepository
         return new ApiResponse<UserDto>
         {
             Success = true,
-            Message = "Usuario obtenido correctamente",
+            Message = "Usuario obtenido correctamente.",
             Data = userDto
         };
     }
@@ -100,7 +100,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<UserDto>
             {
                 Success = false,
-                Message = "El correo electrónico ya está registrado",
+                Message = "El correo electrónico ya está registrado.",
                 Data = null
             };
         }
@@ -112,7 +112,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<UserDto>
             {
                 Success = false,
-                Message = "El nombre de usuario ya está en uso",
+                Message = "El nombre de usuario ya está en uso.",
                 Data = null
             };
         }
@@ -133,7 +133,7 @@ public class UserRepository : IUserRepository
             {
                 Success = false,
                 Message = result.Errors.FirstOrDefault()?.Description
-                    ?? "No se pudo registrar el usuario",
+                    ?? "No se pudo registrar el usuario.",
                 Data = null
             };
         }
@@ -159,7 +159,7 @@ public class UserRepository : IUserRepository
         return new ApiResponse<UserDto>
         {
             Success = true,
-            Message = "Usuario registrado correctamente",
+            Message = "Usuario registrado correctamente.",
             Data = userDto
         };
     }
@@ -173,7 +173,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<AuthResponseDto>
             {
                 Success = false,
-                Message = "Correo o contraseña incorrectos",
+                Message = "Correo o contraseña incorrectos.",
                 Data = null
             };
         }
@@ -185,7 +185,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<AuthResponseDto>
             {
                 Success = false,
-                Message = "Correo o contraseña incorrectos",
+                Message = "Correo o contraseña incorrectos.",
                 Data = null
             };
         }
@@ -209,7 +209,7 @@ public class UserRepository : IUserRepository
         return new ApiResponse<AuthResponseDto>
         {
             Success = true,
-            Message = "Inicio de sesión exitoso",
+            Message = "Inicio de sesión exitoso.",
             Data = authResponse
         };
     }
@@ -223,7 +223,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<UserDto>
             {
                 Success = false,
-                Message = "Usuario no encontrado",
+                Message = "Usuario no encontrado.",
                 Data = null
             };
         }
@@ -237,7 +237,7 @@ public class UserRepository : IUserRepository
                 return new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "El nombre de usuario ya está en uso",
+                    Message = "El nombre de usuario ya está en uso.",
                     Data = null
                 };
             }
@@ -254,7 +254,7 @@ public class UserRepository : IUserRepository
                 return new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "El correo electrónico ya está registrado",
+                    Message = "El correo electrónico ya está registrado.",
                     Data = null
                 };
             }
@@ -275,7 +275,7 @@ public class UserRepository : IUserRepository
                 return new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "El número telefónico ya está registrado",
+                    Message = "El número telefónico ya está registrado.",
                     Data = null
                 };
             }
@@ -293,7 +293,7 @@ public class UserRepository : IUserRepository
             return new ApiResponse<UserDto>
             {
                 Success = false,
-                Message = "No se pudo actualizar el usuario",
+                Message = "No se pudo actualizar el usuario.",
                 Data = null
             };
         }
@@ -303,7 +303,7 @@ public class UserRepository : IUserRepository
         return new ApiResponse<UserDto>
         {
             Success = true,
-            Message = "Perfil actualizado correctamente",
+            Message = "Perfil actualizado correctamente.",
             Data = new UserDto
             {
                 Id = user.Id,

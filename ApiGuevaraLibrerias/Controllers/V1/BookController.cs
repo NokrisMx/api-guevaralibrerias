@@ -1,5 +1,6 @@
 using ApiGuevaraLibrerias.Models;
 using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
 using Asp.Versioning;
 using Mapster;
@@ -32,16 +33,6 @@ public class BookController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("GetBooks")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Obsolete]
-    public async Task<IActionResult> GetBooks()
-    {
-        var books = await _bookRepository.GetBooks();
-        return Ok(books.Adapt<IEnumerable<BookDto>>());
-    }
-
-    [AllowAnonymous]
     [HttpGet("{id:int}", Name = "GetBook")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -49,31 +40,38 @@ public class BookController : ControllerBase
     public async Task<IActionResult> GetBook(int id)
     {
         if (id <= 0)
-            return BadRequest("El ID debe ser mayor que 0");
+        {
+            return BadRequest(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "El ID debe ser mayor que 0",
+                Data = null
+            });
+        }
 
-        var book = await _bookRepository.GetBook(id);
-        if (book == null)
-            return NotFound($"El libro con ID {id} no fue encontrado");
+        var response = await _bookRepository.GetBook(id);
 
-        return Ok(book.Adapt<BookDto>());
+        if (!response.Success)
+            return NotFound(response);
+
+        return Ok(response);
     }
 
     [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetBookInPage(
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10,
-    [FromQuery] string? query = null,
-    [FromQuery] int? categoryId = null,
-    [FromQuery] int? authorId = null,
-    [FromQuery] int? publisherId = null,
-    [FromQuery] decimal? minPrice = null,
-    [FromQuery] decimal? maxPrice = null)
+    public async Task<IActionResult> GetBookInPage([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? query = null, [FromQuery] int? categoryId = null, [FromQuery] int? authorId = null, [FromQuery] int? publisherId = null, [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null)
     {
         if (page <= 0 || pageSize <= 0)
-            return BadRequest("La página y el tamaño deben ser mayores que 0");
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "La página y el tamaño deben ser mayores que 0.",
+                Data = null
+            });
+        }
 
         var booksQuery = _bookRepository.GetBooksQuery();
 
@@ -108,19 +106,20 @@ public class BookController : ControllerBase
 
         var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
 
-        var pagedBooks = await booksQuery
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ProjectToType<BookDto>()
-            .ToListAsync();
+        var pagedBooks = await booksQuery.Skip((page - 1) * pageSize).Take(pageSize).ProjectToType<BookDto>().ToListAsync();
 
-        return Ok(new
+        return Ok(new ApiResponse<object>
         {
-            Page = page,
-            PageSize = pageSize,
-            TotalRecords = totalRecords,
-            TotalPages = totalPages,
-            Data = pagedBooks
+            Success = true,
+            Message = "Libros obtenidos correctamente",
+            Data = new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                Data = pagedBooks
+            }
         });
     }
 
@@ -136,17 +135,35 @@ public class BookController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (await _bookRepository.BookExistsByISBN(dto.ISBN))
-            return Conflict($"Ya existe un libro con el ISBN '{dto.ISBN}'");
-
         if (!await _categoryRepository.CategoryExists(dto.CategoryId))
-            return NotFound($"La categoría con ID {dto.CategoryId} no fue encontrada");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"La categoría con ID {dto.CategoryId} no fue encontrada.",
+                Data = null
+            });
+        }
 
         if (!await _authorRepository.AuthorExists(dto.AuthorId))
-            return NotFound($"El autor con ID {dto.AuthorId} no fue encontrado");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"El autor con ID {dto.AuthorId} no fue encontrado.",
+                Data = null
+            });
+        }
 
         if (!await _publisherRepository.PublisherExists(dto.PublisherId))
-            return NotFound($"La editorial con ID {dto.PublisherId} no fue encontrado");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"La editorial con ID {dto.PublisherId} no fue encontrada.",
+                Data = null
+            });
+        }
 
 
         var book = new Book
@@ -165,19 +182,28 @@ public class BookController : ControllerBase
         };
 
         // Guardar primero para obtener el Id generado
-        var created = await _bookRepository.CreateBook(book);
+        var response = await _bookRepository.CreateBook(book);
 
-        // Subir imagen después de tener el Id
-        UploadBookImage(dto, created);
+        if (!response.Success)
+            return Conflict(response);
 
-        // Si se subió imagen, actualizar el libro con las URLs
+        // Subir imagen 
+        UploadBookImage(dto, book);
+
+        // Actualizar URLs si se subió imagen
         if (dto.Image != null)
-            await _bookRepository.UpdateBook(created);
+            await _bookRepository.UpdateBook(book);
 
-        // Traer el libro completo con Author, Category y Publisher
-        var bookWithRelations = await _bookRepository.GetBook(created.Id);
+        // Obtener libro actualizado
+        var updatedBook = await _bookRepository.GetBook(book.Id);
 
-        return CreatedAtRoute("GetBook", new { id = created.Id }, bookWithRelations!.Adapt<BookDto>());
+        response.Data = updatedBook.Data;
+
+        return CreatedAtRoute(
+        "GetBook",
+        new { id = book.Id },
+        response
+    );
     }
 
     [HttpPut("{id:int}", Name = "UpdateBook")]
@@ -190,22 +216,47 @@ public class BookController : ControllerBase
     public async Task<IActionResult> UpdateBook(int id, [FromForm] UpdateBookDto dto)
     {
         if (id <= 0)
-            return BadRequest("ID inválido");
+        {
+            return BadRequest(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "ID inválido",
+                Data = null
+            });
+        }
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (await _bookRepository.BookExistsByISBN(dto.ISBN, excludeId: id))
-            return Conflict($"Ya existe un libro con el ISBN '{dto.ISBN}'");
-
         if (!await _categoryRepository.CategoryExists(dto.CategoryId))
-            return NotFound($"La categoría con ID {dto.CategoryId} no fue encontrada");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"La categoría con ID {dto.CategoryId} no fue encontrada.",
+                Data = null
+            });
+        }
 
         if (!await _authorRepository.AuthorExists(dto.AuthorId))
-            return NotFound($"El autor con ID {dto.AuthorId} no fue encontrado");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"El autor con ID {dto.AuthorId} no fue encontrado.",
+                Data = null
+            });
+        }
 
         if (!await _publisherRepository.PublisherExists(dto.PublisherId))
-            return NotFound($"La editorial con ID {dto.PublisherId} no fue encontrado");
+        {
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = $"La editorial con ID {dto.PublisherId} no fue encontrada.",
+                Data = null
+            });
+        }
 
         var book = new Book
         {
@@ -223,19 +274,21 @@ public class BookController : ControllerBase
             ImgUrl = dto.ImgUrl,
             ImgUrlLocal = dto.ImgUrlLocal
         };
-        book.Id = id;
 
         // Subir nueva imagen si se envió
         UploadBookImage(dto, book);
 
-        var updated = await _bookRepository.UpdateBook(book);
-        if (updated == null)
-            return NotFound($"El libro con ID {id} no fue encontrado");
+        var response = await _bookRepository.UpdateBook(book);
 
-        // Traer el libro completo con Author, Category y Publisher
-        var bookWithRelations = await _bookRepository.GetBook(updated.Id);
+        if (!response.Success)
+        {
+            if (response.Message.Contains("ISBN"))
+                return Conflict(response);
 
-        return Ok(bookWithRelations!.Adapt<BookDto>());
+            return NotFound(response);
+        }
+
+        return Ok(response);
     }
 
     [HttpDelete("{id:int}", Name = "DeleteBook")]
@@ -247,16 +300,21 @@ public class BookController : ControllerBase
     public async Task<IActionResult> DeleteBook(int id)
     {
         if (id <= 0)
-            return BadRequest("El ID debe ser mayor que 0");
+        {
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "El ID debe ser mayor que 0.",
+                Data = false
+            });
+        }
 
-        if (!await _bookRepository.BookExists(id))
-            return NotFound($"El libro con ID {id} no fue encontrado");
+        var response = await _bookRepository.DeleteBook(id);
 
-        var deleted = await _bookRepository.DeleteBook(id);
-        if (!deleted)
-            return StatusCode(StatusCodes.Status500InternalServerError, "Error al eliminar el libro");
+        if (!response.Success)
+            return NotFound(response);
 
-        return Ok(new { message = $"El libro con ID {id} fue eliminado correctamente" });
+        return Ok(response);
     }
 
     // Método privado para subir imagen

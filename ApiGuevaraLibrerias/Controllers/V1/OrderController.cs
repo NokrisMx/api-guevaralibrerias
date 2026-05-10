@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ApiGuevaraLibrerias.Models;
 using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
 using Asp.Versioning;
 using Mapster;
@@ -32,13 +33,19 @@ public class OrderController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var isAdmin = User.IsInRole("Admin");
 
-        var orders = await _orderRepository.GetOrders();
+        var response = await _orderRepository.GetOrders();
 
-        // Si no es admin, filtra solo sus órdenes
+        if (!response.Success)
+            return BadRequest(response);
+
+        // Filtrar órdenes si no es admin
         if (!isAdmin)
-            orders = orders.Where(o => o.UserId == userId);
+        {
+            response.Data = response.Data!
+                .Where(o => o.UserId == userId);
+        }
 
-        return Ok(orders.Select(o => MapOrderToDto(o)));
+        return Ok(response);
     }
 
     [Authorize]
@@ -50,20 +57,28 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrder(int id)
     {
         if (id <= 0)
-            return BadRequest("El ID debe ser mayor que 0");
+        {
+            return BadRequest(new ApiResponse<OrderDto>
+            {
+                Success = false,
+                Message = "El ID debe ser mayor que 0.",
+                Data = null
+            });
+        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var isAdmin = User.IsInRole("Admin");
 
-        var order = await _orderRepository.GetOrder(id);
-        if (order == null)
-            return NotFound($"La orden con ID {id} no fue encontrada");
+        var response = await _orderRepository.GetOrder(id);
 
-        // Si no es admin solo puede ver sus propias órdenes
-        if (!isAdmin && order.UserId != userId)
+        if (!response.Success)
+            return NotFound(response);
+
+        // Validar permisos
+        if (!isAdmin && response.Data!.UserId != userId)
             return Forbid();
 
-        return Ok(MapOrderToDto(order));
+        return Ok(response);
     }
 
     [Authorize]
@@ -77,24 +92,49 @@ public class OrderController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Obtener el ID del usuario autenticado desde el token
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized("Usuario no autenticado");
+        {
+            return Unauthorized(new ApiResponse<OrderDto>
+            {
+                Success = false,
+                Message = "Usuario no autenticado",
+                Data = null
+            });
+        }
 
         var orderDetails = new List<OrderDetail>();
         decimal total = 0;
 
         foreach (var item in dto.Items)
         {
-            var book = await _bookRepository.GetBook(item.BookId);
-            if (book == null)
-                return NotFound($"El libro con ID {item.BookId} no fue encontrado");
+            var bookResponse = await _bookRepository.GetBook(item.BookId);
+
+            if (!bookResponse.Success || bookResponse.Data == null)
+            {
+                return NotFound(new ApiResponse<OrderDto>
+                {
+                    Success = false,
+                    Message = $"El libro con ID {item.BookId} no fue encontrado",
+                    Data = null
+                });
+            }
+
+            var book = bookResponse.Data;
 
             if (book.Stock < item.Quantity)
-                return BadRequest($"Stock insuficiente para '{book.Title}'. Stock disponible: {book.Stock}");
+            {
+                return BadRequest(new ApiResponse<OrderDto>
+                {
+                    Success = false,
+                    Message = $"Stock insuficiente para '{book.Title}'. Stock disponible: {book.Stock}",
+                    Data = null
+                });
+            }
 
             var subtotal = book.Price * item.Quantity;
+
             total += subtotal;
 
             orderDetails.Add(new OrderDetail
@@ -104,7 +144,10 @@ public class OrderController : ControllerBase
                 Price = book.Price
             });
 
-            await _bookRepository.UpdateStock(book.Id, book.Stock - item.Quantity);
+            await _bookRepository.UpdateStock(
+                book.Id,
+                book.Stock - item.Quantity
+            );
         }
 
         var order = new Order
@@ -115,31 +158,8 @@ public class OrderController : ControllerBase
             OrderDetails = orderDetails
         };
 
-        var created = await _orderRepository.CreateOrder(order);
-        var orderWithRelations = await _orderRepository.GetOrder(created.Id);
+        var response = await _orderRepository.CreateOrder(order);
 
-        return StatusCode(StatusCodes.Status201Created, MapOrderToDto(orderWithRelations!));
-    }
-
-    // Método privado para mapear Order a OrderDto
-    private OrderDto MapOrderToDto(Order order)
-    {
-        return new OrderDto
-        {
-            Id = order.Id,
-            UserId = order.UserId,
-            Username = order.User?.UserName ?? string.Empty,
-            CreatedAt = order.CreatedAt,
-            Total = order.Total,
-            Status = order.Status.ToString(),
-            Items = order.OrderDetails.Select(od => new OrderDetailDto
-            {
-                BookId = od.BookId,
-                Title = od.Book?.Title ?? string.Empty,
-                Quantity = od.Quantity,
-                Price = od.Price,
-                SubTotal = od.Price * od.Quantity
-            }).ToList()
-        };
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 }

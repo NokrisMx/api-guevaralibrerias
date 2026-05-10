@@ -32,7 +32,7 @@ public class AuthorRepository : IAuthorRepository
         return new ApiResponse<IEnumerable<AuthorDto>>
         {
             Success = true,
-            Message = "Autores obtenidos correctamente",
+            Message = "Autores obtenidos correctamente.",
             Data = authors
         };
     }
@@ -46,7 +46,7 @@ public class AuthorRepository : IAuthorRepository
             return new ApiResponse<AuthorDto>
             {
                 Success = false,
-                Message = "Autor no encontrado",
+                Message = "Autor no encontrado.",
                 Data = null
             };
         }
@@ -54,7 +54,7 @@ public class AuthorRepository : IAuthorRepository
         return new ApiResponse<AuthorDto>
         {
             Success = true,
-            Message = "Autor obtenido correctamente",
+            Message = "Autor obtenido correctamente.",
             Data = author.Adapt<AuthorDto>()
         };
     }
@@ -66,7 +66,7 @@ public class AuthorRepository : IAuthorRepository
             return new ApiResponse<AuthorDto>
             {
                 Success = false,
-                Message = "El autor ya existe",
+                Message = "El autor ya existe.",
                 Data = null
             };
         }
@@ -79,11 +79,10 @@ public class AuthorRepository : IAuthorRepository
         return new ApiResponse<AuthorDto>
         {
             Success = true,
-            Message = "Autor creado correctamente",
+            Message = "Autor creado correctamente.",
             Data = author.Adapt<AuthorDto>()
         };
     }
-
 
     public async Task<ApiResponse<AuthorDto>> UpdateAuthor(Author author)
     {
@@ -95,7 +94,7 @@ public class AuthorRepository : IAuthorRepository
             return new ApiResponse<AuthorDto>
             {
                 Success = false,
-                Message = "Autor no encontrado",
+                Message = "Autor no encontrado.",
                 Data = null
             };
         }
@@ -105,7 +104,7 @@ public class AuthorRepository : IAuthorRepository
             return new ApiResponse<AuthorDto>
             {
                 Success = false,
-                Message = "El autor ya existe",
+                Message = "El autor ya existe.",
                 Data = null
             };
         }
@@ -119,7 +118,7 @@ public class AuthorRepository : IAuthorRepository
         return new ApiResponse<AuthorDto>
         {
             Success = true,
-            Message = "Autor actualizado correctamente",
+            Message = "Autor actualizado correctamente.",
             Data = existingAuthor.Adapt<AuthorDto>()
         };
     }
@@ -134,7 +133,7 @@ public class AuthorRepository : IAuthorRepository
             return new ApiResponse<bool>
             {
                 Success = false,
-                Message = "Autor no encontrado",
+                Message = "Autor no encontrado.",
                 Data = false
             };
         }
@@ -146,7 +145,7 @@ public class AuthorRepository : IAuthorRepository
         return new ApiResponse<bool>
         {
             Success = true,
-            Message = "Autor eliminado correctamente",
+            Message = "Autor eliminado correctamente.",
             Data = true
         };
     }

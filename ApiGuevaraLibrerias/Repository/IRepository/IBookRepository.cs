@@ -1,16 +1,17 @@
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 
 namespace ApiGuevaraLibrerias.Repository.IRepository;
 
 public interface IBookRepository
 {
-    Task<IEnumerable<Book>> GetBooks();
-    Task<Book?> GetBook(int id);
+    Task<ApiResponse<BookDto>> GetBook(int id);
     IQueryable<Book> GetBooksQuery();
     Task<bool> BookExists(int id);
     Task<bool> BookExistsByISBN(string isbn, int excludeId = 0);
-    Task<Book> CreateBook(Book book);
-    Task<Book?> UpdateBook(Book book);
+    Task<ApiResponse<BookDto>> CreateBook(Book book);
+    Task<ApiResponse<BookDto>> UpdateBook(Book book);
     Task<bool> UpdateStock(int bookId, int newStock);
-    Task<bool> DeleteBook(int id);
+    Task<ApiResponse<bool>> DeleteBook(int id);
 }

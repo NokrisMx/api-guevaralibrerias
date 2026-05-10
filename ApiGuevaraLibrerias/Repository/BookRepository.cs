@@ -1,5 +1,8 @@
 using ApiGuevaraLibrerias.Models;
+using ApiGuevaraLibrerias.Models.Dtos;
+using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiGuevaraLibrerias.Repository;
@@ -24,45 +27,25 @@ public class BookRepository : IBookRepository
             b.ISBN == isbn && b.Id != excludeId);
     }
 
-    public async Task<Book> CreateBook(Book book)
+    public async Task<ApiResponse<BookDto>> GetBook(int id)
     {
-        book.CreatedAt = DateTime.UtcNow;
-        await _db.Books.AddAsync(book);
-        await _db.SaveChangesAsync();
-        return book;
-    }
+        var book = await _db.Books.Include(b => b.Author).Include(b => b.Category).Include(b => b.Publisher).FirstOrDefaultAsync(b => b.Id == id);
 
-    public async Task<bool> DeleteBook(int id)
-    {
-        var book = await _db.Books.FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
-            return false;
-
-        // Eliminar imagen del servidor si existe
-        if (!string.IsNullOrEmpty(book.ImgUrlLocal) && File.Exists(book.ImgUrlLocal))
-            File.Delete(book.ImgUrlLocal);
-
-        _db.Books.Remove(book);
-        return await _db.SaveChangesAsync() > 0;
-    }
-
-    public async Task<IEnumerable<Book>> GetBooks()
-    {
-        return await _db.Books
-            .Include(b => b.Author)
-            .Include(b => b.Category)
-            .Include(b => b.Publisher)
-            .OrderBy(b => b.Title)
-            .ToListAsync();
-    }
-
-    public async Task<Book?> GetBook(int id)
-    {
-        return await _db.Books
-            .Include(b => b.Author)
-            .Include(b => b.Category)
-            .Include(b => b.Publisher)
-            .FirstOrDefaultAsync(b => b.Id == id);
+        {
+            return new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "Libro no encontrado.",
+                Data = null
+            };
+        }
+        return new ApiResponse<BookDto>
+        {
+            Success = true,
+            Message = "Libro obtenido correctamente.",
+            Data = book.Adapt<BookDto>()
+        };
     }
 
     public IQueryable<Book> GetBooksQuery()
@@ -73,17 +56,60 @@ public class BookRepository : IBookRepository
             .Include(b => b.Publisher)
             .AsNoTracking();
     }
-    public async Task<Book?> UpdateBook(Book book)
+
+    public async Task<ApiResponse<BookDto>> CreateBook(Book book)
+    {
+        if (await BookExistsByISBN(book.ISBN))
+        {
+            return new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "Ya existe un libro con ese ISBN",
+                Data = null
+            };
+        }
+
+        book.CreatedAt = DateTime.UtcNow;
+
+        await _db.Books.AddAsync(book);
+        await _db.SaveChangesAsync();
+
+        var createdBook = await _db.Books.Include(b => b.Author).Include(b => b.Category).Include(b => b.Publisher).FirstOrDefaultAsync(b => b.Id == book.Id);
+
+        return new ApiResponse<BookDto>
+        {
+            Success = true,
+            Message = "Libro creado correctamente",
+            Data = createdBook!.Adapt<BookDto>()
+        };
+    }
+
+    public async Task<ApiResponse<BookDto>> UpdateBook(Book book)
     {
         var existing = await _db.Books.FirstOrDefaultAsync(b => b.Id == book.Id);
+
         if (existing == null)
-            return null;
+        {
+            return new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "Libro no encontrado.",
+                Data = null
+            };
+        }
+
+        if (await BookExistsByISBN(book.ISBN, book.Id))
+        {
+            return new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = "Ya existe un libro con ese ISBN.",
+                Data = null
+            };
+        }
 
         // Si hay nueva imagen, eliminar la anterior
-        if (!string.IsNullOrEmpty(book.ImgUrlLocal) &&
-            !string.IsNullOrEmpty(existing.ImgUrlLocal) &&
-            existing.ImgUrlLocal != book.ImgUrlLocal &&
-            File.Exists(existing.ImgUrlLocal))
+        if (!string.IsNullOrEmpty(book.ImgUrlLocal) && !string.IsNullOrEmpty(existing.ImgUrlLocal) && existing.ImgUrlLocal != book.ImgUrlLocal && File.Exists(existing.ImgUrlLocal))
         {
             File.Delete(existing.ImgUrlLocal);
         }
@@ -103,7 +129,15 @@ public class BookRepository : IBookRepository
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        return existing;
+
+        var updatedBook = await _db.Books.Include(b => b.Author).Include(b => b.Category).Include(b => b.Publisher).FirstOrDefaultAsync(b => b.Id == existing.Id);
+
+        return new ApiResponse<BookDto>
+        {
+            Success = true,
+            Message = "Libro actualizado correctamente.",
+            Data = updatedBook!.Adapt<BookDto>()
+        };
     }
 
     public async Task<bool> UpdateStock(int bookId, int newStock)
@@ -115,6 +149,48 @@ public class BookRepository : IBookRepository
         book.Stock = newStock;
         book.UpdatedAt = DateTime.UtcNow;
         return await _db.SaveChangesAsync() > 0;
+    }
+
+    public async Task<ApiResponse<bool>> DeleteBook(int id)
+    {
+        var book = await _db.Books.FirstOrDefaultAsync(b => b.Id == id);
+
+        if (book == null)
+        {
+            return new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Libro no encontrado.",
+                Data = false
+            };
+        }
+
+        // Eliminar imagen local
+        if (!string.IsNullOrEmpty(book.ImgUrlLocal) && File.Exists(book.ImgUrlLocal))
+        {
+            File.Delete(book.ImgUrlLocal);
+        }
+
+        _db.Books.Remove(book);
+
+        var deleted = await _db.SaveChangesAsync() > 0;
+
+        if (!deleted)
+        {
+            return new ApiResponse<bool>
+            {
+                Success = false,
+                Message = "Error al eliminar el libro.",
+                Data = false
+            };
+        }
+
+        return new ApiResponse<bool>
+        {
+            Success = true,
+            Message = "Libro eliminado correctamente.",
+            Data = true
+        };
     }
 
 }

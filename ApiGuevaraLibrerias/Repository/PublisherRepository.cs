@@ -34,7 +34,7 @@ public class PublisherRepository : IPublisherRepository
             return new ApiResponse<PublisherDto>
             {
                 Success = false,
-                Message = "Editorial no encontrada",
+                Message = "Editorial no encontrada.",
                 Data = null
             };
         }
@@ -42,7 +42,7 @@ public class PublisherRepository : IPublisherRepository
         return new ApiResponse<PublisherDto>
         {
             Success = true,
-            Message = "Editorial obtenida correctamente",
+            Message = "Editorial obtenida correctamente.",
             Data = publisher.Adapt<PublisherDto>()
         };
     }
@@ -54,7 +54,7 @@ public class PublisherRepository : IPublisherRepository
         return new ApiResponse<IEnumerable<PublisherDto>>
         {
             Success = true,
-            Message = "Editoriales obtenidas correctamente",
+            Message = "Editoriales obtenidas correctamente.",
             Data = publishers
         };
     }
@@ -66,7 +66,7 @@ public class PublisherRepository : IPublisherRepository
             return new ApiResponse<PublisherDto>
             {
                 Success = false,
-                Message = "La editorial ya existe",
+                Message = "La editorial ya existe.",
                 Data = null
             };
         }
@@ -79,7 +79,7 @@ public class PublisherRepository : IPublisherRepository
         return new ApiResponse<PublisherDto>
         {
             Success = true,
-            Message = "Editorial creada correctamente",
+            Message = "Editorial creada correctamente.",
             Data = publisher.Adapt<PublisherDto>()
         };
     }
@@ -93,7 +93,7 @@ public class PublisherRepository : IPublisherRepository
             return new ApiResponse<PublisherDto>
             {
                 Success = false,
-                Message = "Editorial no encontrada",
+                Message = "Editorial no encontrada.",
                 Data = null
             };
         }
@@ -103,7 +103,7 @@ public class PublisherRepository : IPublisherRepository
             return new ApiResponse<PublisherDto>
             {
                 Success = false,
-                Message = "La editorial ya existe",
+                Message = "La editorial ya existe.",
                 Data = null
             };
         }
@@ -116,7 +116,7 @@ public class PublisherRepository : IPublisherRepository
         return new ApiResponse<PublisherDto>
         {
             Success = true,
-            Message = "Editorial actualizada correctamente",
+            Message = "Editorial actualizada correctamente.",
             Data = existingPublisher.Adapt<PublisherDto>()
         };
     }
@@ -130,7 +130,7 @@ public class PublisherRepository : IPublisherRepository
             return new ApiResponse<bool>
             {
                 Success = false,
-                Message = "Editorial no encontrada",
+                Message = "Editorial no encontrada.",
                 Data = false
             };
         }
@@ -142,7 +142,7 @@ public class PublisherRepository : IPublisherRepository
         return new ApiResponse<bool>
         {
             Success = true,
-            Message = "Editorial eliminada correctamente",
+            Message = "Editorial eliminada correctamente.",
             Data = true
         };
     }
