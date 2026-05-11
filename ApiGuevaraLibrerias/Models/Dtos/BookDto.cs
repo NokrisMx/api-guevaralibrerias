@@ -30,4 +30,6 @@ public class BookDto
     public int PublisherId { get; set; }
 
     public string PublisherName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
