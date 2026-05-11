@@ -28,7 +28,6 @@ namespace ApiGuevaraLibrerias.Controllers.V1
             return Ok(users);
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpGet("{id}", Name = "GetUser")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
