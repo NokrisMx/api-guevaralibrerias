@@ -86,6 +86,7 @@ public class OrderRepository : IOrderRepository
             Items = order.OrderDetails.Select(od => new OrderDetailDto
             {
                 BookId = od.BookId,
+                ImgUrl = od.Book?.ImgUrl ?? string.Empty,
                 Title = od.Book?.Title ?? string.Empty,
                 Quantity = od.Quantity,
                 Price = od.Price,

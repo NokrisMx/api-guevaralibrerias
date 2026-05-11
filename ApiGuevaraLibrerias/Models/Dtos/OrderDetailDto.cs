@@ -7,6 +7,8 @@ public class OrderDetailDto
 
     public int BookId { get; set; }
 
+    public string? ImgUrl { get; set; }
+
     public string Title { get; set; } = string.Empty;
 
     public int Quantity { get; set; }
