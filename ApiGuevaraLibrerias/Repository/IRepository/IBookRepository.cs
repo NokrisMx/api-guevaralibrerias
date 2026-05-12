@@ -7,6 +7,7 @@ namespace ApiGuevaraLibrerias.Repository.IRepository;
 public interface IBookRepository
 {
     Task<ApiResponse<BookDto>> GetBook(int id);
+    Task<ApiResponse<IEnumerable<BookDto>>> GetBooks();
     IQueryable<Book> GetBooksQuery();
     Task<bool> BookExists(int id);
     Task<bool> BookExistsByISBN(string isbn, int excludeId = 0);

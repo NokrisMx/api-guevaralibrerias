@@ -58,6 +58,15 @@ public class BookController : ControllerBase
     }
 
     [AllowAnonymous]
+    [HttpGet("books")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetBooks()
+    {
+        var response = await _bookRepository.GetBooks();
+        return Ok(response);
+    }
+
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

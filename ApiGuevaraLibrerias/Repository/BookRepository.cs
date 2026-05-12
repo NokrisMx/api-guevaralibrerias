@@ -48,6 +48,26 @@ public class BookRepository : IBookRepository
         };
     }
 
+    public async Task<ApiResponse<IEnumerable<BookDto>>> GetBooks()
+    {
+        var books = await _db.Books.Include(b => b.Author).Include(b => b.Category).Include(b => b.Publisher).ToListAsync();
+        if (books == null)
+        {
+            return new ApiResponse<IEnumerable<BookDto>>
+            {
+                Success = false,
+                Message = "Libros no encontrados",
+                Data = null
+            };
+        }
+        return new ApiResponse<IEnumerable<BookDto>>
+        {
+            Success = true,
+            Message = "Libros obtenidos correctamente.",
+            Data = books.Adapt<IEnumerable<BookDto>>()
+        };
+    }
+
     public IQueryable<Book> GetBooksQuery()
     {
         return _db.Books
