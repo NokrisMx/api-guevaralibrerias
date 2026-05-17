@@ -97,5 +97,38 @@ namespace ApiGuevaraLibrerias.Controllers.V1
 
             return Ok(response);
         }
+
+
+        [Authorize]
+        [HttpPut("change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Usuario no autenticado.");
+
+            var result = await _userRepository.ChangePassword(userId, dto);
+
+            if (!result.Succeeded)
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Error al cambiar la contraseña.",
+                    Data = false,
+                });
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Message = "Contraseña actualizada correctamente.",
+                Data = true,
+            });
+        }
     }
 }

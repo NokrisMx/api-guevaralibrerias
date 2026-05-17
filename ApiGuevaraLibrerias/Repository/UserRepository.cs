@@ -338,4 +338,16 @@ public class UserRepository : IUserRepository
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public async Task<IdentityResult> ChangePassword(string userId, ChangePasswordDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return IdentityResult.Failed(new IdentityError
+            {
+                Description = "Usuario no encontrado."
+            });
+
+        return await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+    }
 }
