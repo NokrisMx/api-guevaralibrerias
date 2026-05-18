@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<bool> UserExists(string email);
     Task<ApiResponse<UserDto>> Register(UserRegisterDto dto);
     Task<ApiResponse<AuthResponseDto>> Login(UserLoginDto dto);
+    Task<ApiResponse<AuthResponseDto>> GoogleLogin(GoogleLoginDto dto);
     Task<ApiResponse<UserDto>> UpdateUser(string userId, UpdateUserDto dto);
     Task<IdentityResult> ChangePassword(string userId, ChangePasswordDto dto);
 }

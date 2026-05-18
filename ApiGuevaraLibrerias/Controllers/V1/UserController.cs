@@ -70,6 +70,18 @@ namespace ApiGuevaraLibrerias.Controllers.V1
             return Ok(response);
         }
 
+        [HttpPost("google-login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+        {
+            var response = await _userRepository.GoogleLogin(dto);
+
+            if (!response.Success)
+                return Unauthorized(response);
+
+            return Ok(response);
+        }
+
         [Authorize]
         [HttpPut("profile")]
         [ProducesResponseType(StatusCodes.Status200OK)]

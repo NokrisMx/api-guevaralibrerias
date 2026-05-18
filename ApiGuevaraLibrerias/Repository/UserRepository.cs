@@ -5,6 +5,7 @@ using ApiGuevaraLibrerias.Models;
 using ApiGuevaraLibrerias.Models.Dtos;
 using ApiGuevaraLibrerias.Models.Responses;
 using ApiGuevaraLibrerias.Repository.IRepository;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -214,6 +215,67 @@ public class UserRepository : IUserRepository
         };
     }
 
+    public async Task<ApiResponse<AuthResponseDto>> GoogleLogin(GoogleLoginDto dto)
+    {
+        var payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken);
+
+        if (payload == null)
+        {
+            return new ApiResponse<AuthResponseDto>
+            {
+                Success = false,
+                Message = "Token de Google inválido.",
+                Data = null
+            };
+        }
+
+        var user = await _userManager.FindByEmailAsync(payload.Email);
+
+        if (user == null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = payload.Email.Split('@')[0],
+                Email = payload.Email,
+                Name = payload.Name,
+                EmailConfirmed = true
+            };
+
+            var createResult = await _userManager.CreateAsync(user);
+
+            if (!createResult.Succeeded)
+            {
+                return new ApiResponse<AuthResponseDto>
+                {
+                    Success = false,
+                    Message = "No se pudo crear usuario Google.",
+                    Data = null
+                };
+            }
+
+            await _userManager.AddToRoleAsync(user, "User");
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault() ?? "User";
+
+        var token = GenerateJwtToken(user, role);
+
+        return new ApiResponse<AuthResponseDto>
+        {
+            Success = true,
+            Message = "Login con Google exitoso.",
+            Data = new AuthResponseDto
+            {
+                Id = user.Id,
+                Token = token,
+                Email = user.Email!,
+                Name = user.Name,
+                Username = user.UserName!,
+                Role = role
+            }
+        };
+    }
     public async Task<ApiResponse<UserDto>> UpdateUser(string userId, UpdateUserDto dto)
     {
         var user = await _userManager.FindByIdAsync(userId);
