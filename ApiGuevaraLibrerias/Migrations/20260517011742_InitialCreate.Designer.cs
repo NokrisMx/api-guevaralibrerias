@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApiGuevaraLibrerias.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260506202125_InitialCreate")]
+    [Migration("20260517011742_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

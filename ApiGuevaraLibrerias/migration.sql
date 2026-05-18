@@ -54,6 +54,14 @@ CREATE TABLE [Categories] (
     CONSTRAINT [PK_Categories] PRIMARY KEY ([Id])
 );
 
+CREATE TABLE [Publishers] (
+    [Id] int NOT NULL IDENTITY,
+    [Name] nvarchar(50) NOT NULL,
+    [CreatedAt] datetime2 NOT NULL,
+    [UpdatedAt] datetime2 NULL,
+    CONSTRAINT [PK_Publishers] PRIMARY KEY ([Id])
+);
+
 CREATE TABLE [AspNetRoleClaims] (
     [Id] int NOT NULL IDENTITY,
     [RoleId] nvarchar(450) NOT NULL,
@@ -114,17 +122,21 @@ CREATE TABLE [Books] (
     [Title] nvarchar(200) NOT NULL,
     [Description] nvarchar(1000) NOT NULL,
     [Price] decimal(18,2) NOT NULL,
+    [Pages] int NOT NULL,
     [ImgUrl] nvarchar(max) NULL,
     [ImgUrlLocal] nvarchar(max) NULL,
     [ISBN] nvarchar(20) NOT NULL,
     [Stock] int NOT NULL,
+    [YearPublished] datetime2 NOT NULL,
     [CreatedAt] datetime2 NOT NULL,
     [UpdatedAt] datetime2 NULL,
     [CategoryId] int NOT NULL,
     [AuthorId] int NOT NULL,
+    [PublisherId] int NOT NULL,
     CONSTRAINT [PK_Books] PRIMARY KEY ([Id]),
     CONSTRAINT [FK_Books_Authors_AuthorId] FOREIGN KEY ([AuthorId]) REFERENCES [Authors] ([Id]) ON DELETE CASCADE,
-    CONSTRAINT [FK_Books_Categories_CategoryId] FOREIGN KEY ([CategoryId]) REFERENCES [Categories] ([Id]) ON DELETE CASCADE
+    CONSTRAINT [FK_Books_Categories_CategoryId] FOREIGN KEY ([CategoryId]) REFERENCES [Categories] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_Books_Publishers_PublisherId] FOREIGN KEY ([PublisherId]) REFERENCES [Publishers] ([Id]) ON DELETE CASCADE
 );
 
 CREATE TABLE [OrderDetails] (
@@ -160,6 +172,8 @@ CREATE INDEX [IX_Books_CategoryId] ON [Books] ([CategoryId]);
 
 CREATE UNIQUE INDEX [IX_Books_ISBN] ON [Books] ([ISBN]);
 
+CREATE INDEX [IX_Books_PublisherId] ON [Books] ([PublisherId]);
+
 CREATE UNIQUE INDEX [IX_Categories_Name] ON [Categories] ([Name]);
 
 CREATE INDEX [IX_OrderDetails_BookId] ON [OrderDetails] ([BookId]);
@@ -168,8 +182,10 @@ CREATE INDEX [IX_OrderDetails_OrderId] ON [OrderDetails] ([OrderId]);
 
 CREATE INDEX [IX_Orders_UserId] ON [Orders] ([UserId]);
 
+CREATE UNIQUE INDEX [IX_Publishers_Name] ON [Publishers] ([Name]);
+
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20260503220851_InitialCreate', N'10.0.7');
+VALUES (N'20260517011742_InitialCreate', N'10.0.7');
 
 COMMIT;
 GO

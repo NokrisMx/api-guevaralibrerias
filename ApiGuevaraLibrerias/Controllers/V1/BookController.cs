@@ -342,8 +342,9 @@ public class BookController : ControllerBase
             using var fileStream = new FileStream(filePath, FileMode.Create);
             dto.Image.CopyTo(fileStream);
 
-            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
-            book.ImgUrl = $"{baseUrl}/BookImages/{fileName}";
+            //var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+            //book.ImgUrl = $"{baseUrl}/BookImages/{fileName}";
+            book.ImgUrl = $"/BookImages/{fileName}";
             book.ImgUrlLocal = filePath;
         }
         else
